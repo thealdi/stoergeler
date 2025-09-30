@@ -1,5 +1,9 @@
 import { fetchConnectionStatus, fetchDeviceLog, fetchOutages } from './api.js';
-import { initCalendar, renderOutages as renderCalendarOutages, highlightEvent } from './calendar.js';
+import {
+  initCalendar,
+  renderOutages as renderCalendarOutages,
+  highlightEvent
+} from './calendar.js';
 import {
   onCheckConnection,
   onRefresh,
@@ -10,15 +14,21 @@ import {
   renderOutagePagination,
   renderDeviceLogPagination,
   updateFilterInfo,
-  toggleClearFilter,
+  toggleClearFilter
 } from './ui.js';
-import { state, updateLogs, updateOutages, resetSelection, setSelectedEvent } from './state.js';
+import {
+  state,
+  updateLogs,
+  updateOutages,
+  resetSelection,
+  setSelectedEvent
+} from './state.js';
 import { formatRangeLabel } from './utils.js';
 import { Paginator } from './pagination.js';
 
 const calendarElement = document.querySelector('#calendar');
 const calendar = initCalendar(calendarElement, {
-  onEventClick: handleCalendarEventClick,
+  onEventClick: handleCalendarEventClick
 });
 
 const outagePaginator = new Paginator([], 5);
@@ -29,8 +39,14 @@ async function refreshData() {
   try {
     const [outages, logs] = await Promise.all([
       fetchOutages(),
-      fetchDeviceLog(),
+      fetchDeviceLog()
     ]);
+
+    // Sort outages by start_time descending
+    const sortedOutages = [...outages].sort(
+      (a, b) =>
+        new Date(b.start_time).getTime - new Date(a.start_time).getTime()
+    );
 
     updateOutages(outages);
     updateLogs(logs);
@@ -46,7 +62,10 @@ async function refreshData() {
     updateFilterInfo('Keine Filter aktiv. Alle Ereignisse werden angezeigt.');
     toggleClearFilter(true);
 
-    updateStatus(`Daten aktualisiert – ${outages.length} Störungen, ${logs.length} Logzeilen`, 'success');
+    updateStatus(
+      `Daten aktualisiert – ${outages.length} Störungen, ${logs.length} Logzeilen`,
+      'success'
+    );
   } catch (error) {
     updateStatus(error.message, 'error');
   }
@@ -72,7 +91,9 @@ function handleCalendarEventClick(event) {
   const filteredLogs = filterLogsByRange(state.logs, start, end);
   renderDeviceLog(filteredLogs);
   renderDeviceLogPagination(null);
-  updateFilterInfo(`Gefiltert nach ${label} (${filteredLogs.length} Ereignisse).`);
+  updateFilterInfo(
+    `Gefiltert nach ${label} (${filteredLogs.length} Ereignisse).`
+  );
   toggleClearFilter(false);
   highlightEvent(calendar, event.id);
 }
@@ -102,7 +123,8 @@ function buildConnectionInfoSummary(connection) {
   const infoBits = [];
   if (connection.external_ip) infoBits.push(`IP ${connection.external_ip}`);
   if (connection.wan_access_type) infoBits.push(connection.wan_access_type);
-  if (connection.wan_link_status) infoBits.push(`Link ${connection.wan_link_status}`);
+  if (connection.wan_link_status)
+    infoBits.push(`Link ${connection.wan_link_status}`);
   return infoBits.length ? ` (${infoBits.join(' | ')})` : '';
 }
 
@@ -122,7 +144,7 @@ function updateOutageView() {
     onNext: () => {
       outagePaginator.next();
       updateOutageView();
-    },
+    }
   });
 }
 
@@ -136,7 +158,7 @@ function updateLogView() {
     onNext: () => {
       logPaginator.next();
       updateLogView();
-    },
+    }
   });
 }
 
