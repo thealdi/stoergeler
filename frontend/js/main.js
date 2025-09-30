@@ -48,7 +48,7 @@ async function refreshData() {
         new Date(b.start).getTime() - new Date(a.start).getTime()
     );
 
-    updateOutages(sortedOutagesutages);
+    updateOutages(sortedOutages);
     updateLogs(logs);
 
     outagePaginator.setItems(sortedOutages);
