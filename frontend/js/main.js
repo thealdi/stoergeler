@@ -45,13 +45,13 @@ async function refreshData() {
     // Sort outages by start_time descending
     const sortedOutages = [...outages].sort(
       (a, b) =>
-        new Date(b.start_time).getTime - new Date(a.start_time).getTime()
+        new Date(b.start).getTime() - new Date(a.start).getTime()
     );
 
-    updateOutages(outages);
+    updateOutages(sortedOutagesutages);
     updateLogs(logs);
 
-    outagePaginator.setItems(outages);
+    outagePaginator.setItems(sortedOutages);
     logPaginator.setItems(logs);
 
     updateOutageView();
