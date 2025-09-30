@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>StoerGeler</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.css" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>StoerGeler</h1>
+      <p>Visualisierung von Internet-Störungen über die Fritzbox TR-064 Schnittstelle</p>
+    </header>
+
+    <main>
+      <section class="controls">
+        <button id="checkConnectionButton" type="button">Verbindung prüfen</button>
+        <button id="refreshButton">Aktualisieren</button>
+        <span id="statusMessage" role="status"></span>
+      </section>
+
+      <section class="calendar-section">
+        <div class="calendar-header">
+          <h2>Kalender</h2>
+          <button id="clearFilterButton" type="button">Filter zurücksetzen</button>
+        </div>
+        <div id="calendar"></div>
+        <p id="calendarSelectionInfo" class="calendar-selection-info">
+          Klick auf einen "Offline"-Eintrag filtert das Ereignisprotokoll.
+        </p>
+      </section>
+
+      <section class="outage-list">
+        <h2>Störungen</h2>
+        <div id="outage-pagination" class="pagination"></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Start</th>
+              <th>Ende</th>
+              <th>Dauer</th>
+              <th>Kategorie</th>
+            </tr>
+          </thead>
+          <tbody id="outageTableBody"></tbody>
+        </table>
+      </section>
+
+      <section class="device-log">
+        <h2>Fritzbox Ereignisprotokoll</h2>
+        <div id="device-log-pagination" class="pagination"></div>
+        <table>
+          <thead>
+            <tr>
+              <th>Zeit</th>
+              <th>Meldung</th>
+            </tr>
+          </thead>
+          <tbody id="deviceLogTableBody"></tbody>
+        </table>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.10/index.global.min.js"></script>
+    <script src="js/main.js" type="module"></script>
+  </body>
+</html>

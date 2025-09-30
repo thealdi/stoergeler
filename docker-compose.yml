@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  backend:
+    image: stoergeler:latest
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
+    container_name: stoergeler-backend
+    ports:
+      - "8001:8000"
+    environment:
+      FRITZBOX_ADDRESS: ${FRITZBOX_ADDRESS:-fritz.box}
+      FRITZBOX_USERNAME: ${FRITZBOX_USERNAME:-}
+      FRITZBOX_PASSWORD: ${FRITZBOX_PASSWORD:-}
+      POLL_INTERVAL_SECONDS: ${POLL_INTERVAL_SECONDS:-60}
+      DEVICE_LOG_POLL_INTERVAL_SECONDS: ${DEVICE_LOG_POLL_INTERVAL_SECONDS:-60}
+      DATABASE_PATH: /app/data/stoergeler.db
+    volumes:
+      - /volume1/docker/stoergeler/data:/app/data
+
+  frontend:
+    image: nginx:alpine
+    platform: ${DOCKER_PLATFORM:-linux/amd64}
+    container_name: stoergeler-frontend
+    depends_on:
+      - backend
+    ports:
+      - "8080:80"
+    volumes:
+      - /volume1/docker/stoergeler/frontend:/usr/share/nginx/html:ro
