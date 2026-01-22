@@ -5,6 +5,10 @@ from pathlib import Path
 from typing import Optional
 import os
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 @dataclass(frozen=True)
 class Settings:
