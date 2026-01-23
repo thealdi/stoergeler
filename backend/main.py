@@ -16,8 +16,8 @@ from .schemas import (
     OutageWindow,
     StatusResponse,
 )
+from .outage_calculator import OutageCalculator
 from .outage_config import OutageKeywords
-from .outage_service import OutageService
 from .fritzbox_client import FritzBoxCredentials, FritzboxClient
 from .tracker import ConnectionTracker
 
@@ -34,7 +34,7 @@ db_context.init_schema()
 status_repository = StatusRepository(db_context)
 device_log_repository = DeviceLogRepository(db_context)
 outage_repository = OutageRepository(db_context)
-outage_service = OutageService(
+outage_calculator = OutageCalculator(
     cfg=OutageKeywords(
         planned_keywords=settings.outage_planned_keywords,
         ipv4_disconnect_keywords=settings.outage_ipv4_disconnect_keywords,
@@ -55,7 +55,7 @@ device_log_sync = DeviceLogSync(
     fritzbox_client=fritzbox_client,
     device_log_repository=device_log_repository,
     outage_repository=outage_repository,
-    outage_service=outage_service,
+    outage_calculator=outage_calculator,
 )
 tracker = ConnectionTracker(
     status_repository=status_repository,
