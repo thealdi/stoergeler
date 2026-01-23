@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
 from .database import DatabaseContext, DeviceLogRepository, OutageRepository, StatusRepository
+from .device_log_sync import DeviceLogSync
 from .schemas import (
     ConnectivityStatus,
     DeviceLogEntry,
@@ -16,7 +17,8 @@ from .schemas import (
     StatusResponse,
 )
 from .outage_service import OutageService
-from .tracker import ConnectionTracker, FritzBoxCredentials
+from .fritzbox_client import FritzBoxCredentials, FritzboxClient
+from .tracker import ConnectionTracker
 
 app = FastAPI(title="StoerGeler Backend", root_path="/api")
 app.add_middleware(
@@ -32,16 +34,23 @@ device_log_repository = DeviceLogRepository(db_context)
 outage_repository = OutageRepository(db_context)
 outage_service = OutageService()
 
-tracker = ConnectionTracker(
-    status_repository=status_repository,
-    device_log_repository=device_log_repository,
-    outage_repository=outage_repository,
-    outage_service=outage_service,
-    credentials=FritzBoxCredentials(
+fritzbox_client = FritzboxClient(
+    FritzBoxCredentials(
         address=settings.fritzbox_address,
         username=settings.fritzbox_username,
         password=settings.fritzbox_password,
-    ),
+    )
+)
+device_log_sync = DeviceLogSync(
+    fritzbox_client=fritzbox_client,
+    device_log_repository=device_log_repository,
+    outage_repository=outage_repository,
+    outage_service=outage_service,
+)
+tracker = ConnectionTracker(
+    status_repository=status_repository,
+    fritzbox_client=fritzbox_client,
+    device_log_sync=device_log_sync,
     poll_interval_seconds=settings.poll_interval_seconds,
     device_log_poll_interval_seconds=settings.device_log_poll_interval_seconds,
 )
