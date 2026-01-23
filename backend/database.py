@@ -15,7 +15,6 @@ class DatabaseContext:
     def __init__(self, database_path: Path) -> None:
         self._database_path = database_path
         self._database_path.parent.mkdir(parents=True, exist_ok=True)
-        self._initialise_schema()
 
     @contextmanager
     def connect(self) -> Generator[sqlite3.Connection, None, None]:
@@ -26,7 +25,7 @@ class DatabaseContext:
         finally:
             conn.close()
 
-    def _initialise_schema(self) -> None:
+    def init_schema(self) -> None:
         with self.connect() as conn:
             conn.execute(
                 """

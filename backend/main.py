@@ -30,6 +30,7 @@ app.add_middleware(
 )
 
 db_context = DatabaseContext(settings.database_path)
+db_context.init_schema()
 status_repository = StatusRepository(db_context)
 device_log_repository = DeviceLogRepository(db_context)
 outage_repository = OutageRepository(db_context)
