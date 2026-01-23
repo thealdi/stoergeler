@@ -19,14 +19,8 @@ class OutageInterval:
     end_log_entry_id: Optional[int]
 
 
-class OutageService:
-    """Derives outage intervals from device log entries.
-
-    The Fritzbox protokolliert mehrere getrennte Eventserien (IPv4/IPv6) und
-    streut planmäßige Zwangstrennungen ein. Diese Klasse lässt die Einträge über
-    eine kleine Zustandsmaschine laufen und produziert daraus abgeschlossene
-    oder offene Störungsintervalle, inklusive Kennzeichnung geplanter Ereignisse.
-    """
+class OutageCalculator:
+    """Derives outage intervals from device log entries."""
 
     def __init__(self, cfg: OutageKeywords = DEFAULT_OUTAGE_KEYWORDS) -> None:
         self._cfg = cfg
