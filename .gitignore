@@ -181,5 +181,5 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-# Local docs (dev notes)
-docs/
+# Internal development notes
+docs-dev/
