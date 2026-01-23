@@ -5,6 +5,8 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional, Sequence
 
 from .models import DeviceLogEntryRecord
+from .outage_classifier import categorize_log_entry
+from .outage_config import DEFAULT_OUTAGE_KEYWORDS, OutageKeywords
 
 
 @dataclass
@@ -26,6 +28,9 @@ class OutageService:
     oder offene Störungsintervalle, inklusive Kennzeichnung geplanter Ereignisse.
     """
 
+    def __init__(self, cfg: OutageKeywords = DEFAULT_OUTAGE_KEYWORDS) -> None:
+        self._cfg = cfg
+
     def calculate(self, entries: Sequence[DeviceLogEntryRecord]) -> List[Dict[str, Any]]:
         outages: List[Dict[str, Any]] = []
 
@@ -36,7 +41,7 @@ class OutageService:
         pending_planned = {"ipv4": False, "ipv6": False}
 
         for entry in entries:
-            protocol, action = self._categorise_log_entry(entry)
+            protocol, action = categorize_log_entry(entry, self._cfg)
 
             if action == "planned_hint":
                 if protocol in ("ipv4", "both"):
@@ -96,35 +101,3 @@ class OutageService:
                 )
 
         return outages
-
-    @staticmethod
-    def _categorise_log_entry(entry: DeviceLogEntryRecord) -> tuple[str, str]:
-        message = (entry.message or "").lower()
-
-        planned_keywords = (
-            "zwangstrennung",
-            "wird kurz unterbrochen",
-            "trennung durch den anbieter",
-        )
-        if any(keyword in message for keyword in planned_keywords):
-            return "both", "planned_hint"
-
-        if "internetverbindung ipv6" in message:
-            if "wurde getrennt" in message or ("präfix" in message and "nicht mehr gültig" in message):
-                return "ipv6", "disconnect"
-            if "wurde erfolgreich hergestellt" in message or "wurde erfolgreich bezogen" in message:
-                return "ipv6", "connect"
-
-        if "internetverbindung" in message and "wurde getrennt" in message:
-            return "ipv4", "disconnect"
-
-        if "internetverbindung" in message and "wurde erfolgreich hergestellt" in message:
-            return "ipv4", "connect"
-
-        if "ipv6-präfix" in message and "erfolgreich bezogen" in message:
-            return "ipv6", "connect"
-
-        if "ipv6-präfix" in message and "nicht mehr gültig" in message:
-            return "ipv6", "disconnect"
-
-        return "unknown", "ignore"

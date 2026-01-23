@@ -16,6 +16,7 @@ from .schemas import (
     OutageWindow,
     StatusResponse,
 )
+from .outage_config import OutageKeywords
 from .outage_service import OutageService
 from .fritzbox_client import FritzBoxCredentials, FritzboxClient
 from .tracker import ConnectionTracker
@@ -32,7 +33,15 @@ db_context = DatabaseContext(settings.database_path)
 status_repository = StatusRepository(db_context)
 device_log_repository = DeviceLogRepository(db_context)
 outage_repository = OutageRepository(db_context)
-outage_service = OutageService()
+outage_service = OutageService(
+    cfg=OutageKeywords(
+        planned_keywords=settings.outage_planned_keywords,
+        ipv4_disconnect_keywords=settings.outage_ipv4_disconnect_keywords,
+        ipv4_connect_keywords=settings.outage_ipv4_connect_keywords,
+        ipv6_disconnect_keywords=settings.outage_ipv6_disconnect_keywords,
+        ipv6_connect_keywords=settings.outage_ipv6_connect_keywords,
+    )
+)
 
 fritzbox_client = FritzboxClient(
     FritzBoxCredentials(
