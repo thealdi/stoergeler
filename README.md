@@ -2,6 +2,8 @@
 
 Python backend and Vue frontend to monitor and visualize Fritzbox internet connectivity via TR-064.
 
+**Version:** v1.0.0
+
 ## Architecture Overview
 
 - **Backend**: FastAPI app (`backend/main.py`) polls TR-064 (`fritzconnection`) in background tasks, stores status changes and device logs, and calculates outage windows.
