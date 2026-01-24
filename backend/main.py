@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Dict, Optional
+import os
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -148,6 +149,14 @@ def connection_check() -> ConnectivityStatus:
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return ConnectivityStatus(**status)
+
+
+@app.get("/version")
+def version() -> Dict[str, str]:
+    return {
+        "version": os.getenv("APP_VERSION", "dev"),
+        "commit": os.getenv("GIT_SHA", "unknown"),
+    }
 
 
 if __name__ == "__main__":  # pragma: no cover

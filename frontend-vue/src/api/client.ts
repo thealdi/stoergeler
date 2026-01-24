@@ -7,6 +7,11 @@ import type {
   DeviceLogEntry,
 } from './types';
 
+export type BackendVersion = {
+  version: string;
+  commit?: string;
+};
+
 const backendBaseUrl = resolveBackendBaseUrl();
 
 async function request<T>(path: string): Promise<T> {
@@ -37,4 +42,8 @@ export async function fetchDeviceLog(limit = 500): Promise<DeviceLogEntry[]> {
 
 export async function fetchConnectionStatus(): Promise<ConnectivityStatus> {
   return request<ConnectivityStatus>('/connection-check');
+}
+
+export async function fetchBackendVersion(): Promise<BackendVersion> {
+  return request<BackendVersion>('/version');
 }

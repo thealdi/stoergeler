@@ -1,5 +1,8 @@
 FROM python:3.11-slim AS runtime
 
+ARG APP_VERSION=dev
+ARG GIT_SHA=unknown
+
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
@@ -17,3 +20,5 @@ VOLUME ["/app/data"]
 ENV PORT=8000
 
 CMD ["uvicorn", "backend.main:app", "--host", "0.0.0.0", "--port", "8000"]
+ENV APP_VERSION=${APP_VERSION} \
+    GIT_SHA=${GIT_SHA}
