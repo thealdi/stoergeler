@@ -59,7 +59,6 @@ onMounted(() => {
     })
     .catch(() => {
       backendVersion.value = 'unavailable';
-      backendCommit.value = 'unknown';
     });
 });
 </script>

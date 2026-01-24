@@ -2,9 +2,12 @@ version: "3.9"
 
 services:
   backend:
-    image: stoergeler:latest
+    image: thealdi/stoergeler:latest
     platform: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: stoergeler-backend
+    networks:
+      stoergeler_net:
+        ipv4_address: 172.18.0.4
     ports:
       - "8001:8000"
     environment:
@@ -21,9 +24,17 @@ services:
     image: nginx:alpine
     platform: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: stoergeler-frontend
+    networks:
+      stoergeler_net:
+        ipv4_address: 172.18.0.5
     depends_on:
       - backend
     ports:
       - "8080:80"
     volumes:
       - /volume1/docker/stoergeler/frontend:/usr/share/nginx/html:ro
+
+networks:
+  stoergeler_net:
+    external: true
+    name: stoergeler
