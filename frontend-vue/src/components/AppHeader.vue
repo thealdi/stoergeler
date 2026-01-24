@@ -15,6 +15,9 @@
         />
       </NFlex>
       <NFlex align="center" justify="end" gap="12" :wrap="false" class="app-header__actions">
+        <NText depth="3" class="app-header__version">
+          UI {{ uiVersion }} · API {{ backendVersion }}
+        </NText>
         <NButton size="small" :disabled="isChecking" @click="$emit('check')">
           Verbindung prüfen
         </NButton>
@@ -29,7 +32,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { MenuOption } from 'naive-ui';
-import { NButton, NFlex, NLayoutHeader, NMenu } from 'naive-ui';
+import { NButton, NFlex, NLayoutHeader, NMenu, NText } from 'naive-ui';
 import logoUrl from '../assets/logo.png';
 
 const props = defineProps<{
@@ -37,6 +40,8 @@ const props = defineProps<{
   menuOptions: MenuOption[];
   isChecking: boolean;
   isRefreshing: boolean;
+  uiVersion: string;
+  backendVersion: string;
 }>();
 
 const emit = defineEmits<{
@@ -97,5 +102,10 @@ function goHome() {
 
 .app-header__actions {
   flex-wrap: nowrap;
+}
+
+.app-header__version {
+  font-size: 12px;
+  white-space: nowrap;
 }
 </style>

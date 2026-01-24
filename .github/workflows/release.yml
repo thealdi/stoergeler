@@ -53,6 +53,9 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
+          build-args: |
+            APP_VERSION=v${{ steps.release.outputs.new_release_version }}
+            GIT_SHA=${{ github.sha }}
           tags: |
             thealdi/stoergeler:latest
             thealdi/stoergeler:v${{ steps.release.outputs.new_release_version }}
