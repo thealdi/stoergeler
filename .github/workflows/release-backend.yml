@@ -31,16 +31,9 @@ jobs:
 
       - name: Semantic Release
         id: release
-        uses: cycjimmy/semantic-release-action@v4
-        with:
-          semantic_version: 23
-          branches: |
-            [
-              "main"
-            ]
+        run: npx semantic-release --config .releaserc-backend.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SEMANTIC_RELEASE_CONFIG: .releaserc-backend.json
 
       - name: Set up Docker Buildx
         if: steps.release.outputs.new_release_published == 'true'
