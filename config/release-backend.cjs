@@ -6,6 +6,12 @@ module.exports = {
       "@semantic-release/commit-analyzer",
       {
         preset: "angular",
+        releaseRules: [
+          { scope: "backend", release: "minor" },
+          { scope: "backend", type: "fix", release: "patch" },
+          { scope: "backend", type: "perf", release: "patch" },
+          { scope: "backend", breaking: true, release: "major" },
+        ],
       },
     ],
     [
