@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - "frontend-vue/**"
-      - ".releaserc-frontend.json"
+      - "config/release-frontend.cjs"
       - ".github/workflows/release-frontend.yml"
 
 permissions:
@@ -32,7 +32,7 @@ jobs:
 
       - name: Semantic Release
         id: release
-        run: npx semantic-release --config ./.releaserc-frontend.json
+        run: npx semantic-release -e ./config/release-frontend.cjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

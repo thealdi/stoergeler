@@ -7,6 +7,7 @@
     "dev": "sh -c '. ./.venv/bin/activate && uvicorn backend.main:app --host 0.0.0.0 --port 8001 & backend_pid=$!; npm --prefix frontend-vue run dev; kill $backend_pid'"
   },
   "devDependencies": {
+    "conventional-changelog-angular": "5.0.13",
     "semantic-release": "23.1.1"
   }
 }

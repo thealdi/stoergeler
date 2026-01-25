@@ -1,0 +1,19 @@
+module.exports = {
+  branches: ["main"],
+  tagFormat: "backend-v${version}",
+  plugins: [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        preset: "angular",
+      },
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        preset: "angular",
+      },
+    ],
+    "@semantic-release/github",
+  ],
+};
