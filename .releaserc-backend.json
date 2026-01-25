@@ -2,8 +2,40 @@
   "branches": ["main"],
   "tagFormat": "backend-v${version}",
   "plugins": [
-    ["@semantic-release/commit-analyzer", { "preset": "angular" }],
-    ["@semantic-release/release-notes-generator", { "preset": "angular" }],
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            { "type": "feat", "section": "Features", "hidden": false },
+            { "type": "fix", "section": "Bug Fixes", "hidden": false },
+            { "type": "perf", "section": "Performance Improvements", "hidden": false },
+            { "type": "refactor", "section": "Refactors", "hidden": false },
+            { "type": "docs", "section": "Documentation", "hidden": false },
+            { "type": "test", "section": "Tests", "hidden": false },
+            { "type": "chore", "section": "Chores", "hidden": false }
+          ]
+        }
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "conventionalcommits",
+        "presetConfig": {
+          "types": [
+            { "type": "feat", "section": "Features", "hidden": false },
+            { "type": "fix", "section": "Bug Fixes", "hidden": false },
+            { "type": "perf", "section": "Performance Improvements", "hidden": false },
+            { "type": "refactor", "section": "Refactors", "hidden": false },
+            { "type": "docs", "section": "Documentation", "hidden": false },
+            { "type": "test", "section": "Tests", "hidden": false },
+            { "type": "chore", "section": "Chores", "hidden": false }
+          ]
+        }
+      }
+    ],
     "@semantic-release/github"
   ]
 }
