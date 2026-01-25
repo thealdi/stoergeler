@@ -9,7 +9,7 @@ on:
       - "Dockerfile"
       - "requirements.txt"
       - ".releaserc-backend.json"
-      - ".github/workflows/release.yml"
+      - ".github/workflows/release-backend.yml"
 
 permissions:
   contents: write
@@ -31,7 +31,7 @@ jobs:
 
       - name: Semantic Release
         id: release
-        run: npx semantic-release --config .releaserc-backend.json
+        run: npx semantic-release --config ./.releaserc-backend.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
