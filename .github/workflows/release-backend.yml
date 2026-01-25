@@ -29,9 +29,12 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Install release dependencies
+        run: npm ci
+
       - name: Semantic Release
         id: release
-        run: npx semantic-release@23.1.1 --config ./.releaserc-backend.json
+        run: npx semantic-release --config ./.releaserc-backend.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
