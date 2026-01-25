@@ -29,7 +29,7 @@ jobs:
 
       - name: Semantic Release
         id: release
-        run: npx semantic-release --config ./.releaserc-frontend.json
+        run: npx semantic-release@23.1.1 --config ./.releaserc-frontend.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
