@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   backend:
-    image: thealdi/stoergeler:latest
+    image: thealdi/stoergeler-backend:latest
     platform: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: stoergeler-backend
     networks:
@@ -21,7 +21,7 @@ services:
       - /volume1/docker/stoergeler/data:/app/data
 
   frontend:
-    image: nginx:alpine
+    image: thealdi/stoergeler-frontend:latest
     platform: ${DOCKER_PLATFORM:-linux/amd64}
     container_name: stoergeler-frontend
     networks:
@@ -31,8 +31,6 @@ services:
       - backend
     ports:
       - "8080:80"
-    volumes:
-      - /volume1/docker/stoergeler/frontend:/usr/share/nginx/html:ro
 
 networks:
   stoergeler_net:

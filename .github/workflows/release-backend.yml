@@ -1,9 +1,15 @@
-name: Release
+name: Backend Release
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "backend/**"
+      - "Dockerfile"
+      - "requirements.txt"
+      - ".releaserc-backend.json"
+      - ".github/workflows/release.yml"
 
 permissions:
   contents: write
@@ -34,6 +40,7 @@ jobs:
             ]
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SEMANTIC_RELEASE_CONFIG: .releaserc-backend.json
 
       - name: Set up Docker Buildx
         if: steps.release.outputs.new_release_published == 'true'
@@ -57,5 +64,5 @@ jobs:
             APP_VERSION=v${{ steps.release.outputs.new_release_version }}
             GIT_SHA=${{ github.sha }}
           tags: |
-            thealdi/stoergeler:latest
-            thealdi/stoergeler:v${{ steps.release.outputs.new_release_version }}
+            thealdi/stoergeler-backend:latest
+            thealdi/stoergeler-backend:v${{ steps.release.outputs.new_release_version }}
