@@ -1,0 +1,29 @@
+{
+  "name": "stoergeler-backend-release",
+  "private": true,
+  "release": {
+    "branches": ["main"],
+    "tagFormat": "backend-v${version}",
+    "plugins": [
+      [
+        "@semantic-release/commit-analyzer",
+        {
+          "preset": "angular",
+          "releaseRules": [
+            { "scope": "backend", "release": "minor" },
+            { "scope": "backend", "type": "fix", "release": "patch" },
+            { "scope": "backend", "type": "perf", "release": "patch" },
+            { "scope": "backend", "breaking": true, "release": "major" }
+          ]
+        }
+      ],
+      [
+        "@semantic-release/release-notes-generator",
+        {
+          "preset": "angular"
+        }
+      ],
+      "@semantic-release/github"
+    ]
+  }
+}
