@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "frontend-vue/**"
+      - "frontend/**"
       - "config/release-frontend.cjs"
       - ".github/workflows/release-frontend.yml"
 
@@ -54,8 +54,8 @@ jobs:
         if: steps.release.outputs.new_release_published == 'true'
         uses: docker/build-push-action@v5
         with:
-          context: ./frontend-vue
-          file: ./frontend-vue/Dockerfile
+          context: ./frontend
+          file: ./frontend/Dockerfile
           push: true
           platforms: linux/amd64
           build-args: |

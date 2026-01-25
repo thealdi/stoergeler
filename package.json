@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "dev:backend": "sh -c '. ./.venv/bin/activate && uvicorn backend.main:app --host 0.0.0.0 --port 8001'",
-    "dev:frontend": "npm --prefix frontend-vue run dev",
-    "dev": "sh -c '. ./.venv/bin/activate && uvicorn backend.main:app --host 0.0.0.0 --port 8001 & backend_pid=$!; npm --prefix frontend-vue run dev; kill $backend_pid'"
+    "dev:frontend": "npm --prefix frontend run dev",
+    "dev": "sh -c '. ./.venv/bin/activate && uvicorn backend.main:app --host 0.0.0.0 --port 8001 & backend_pid=$!; npm --prefix frontend run dev; kill $backend_pid'"
   },
   "devDependencies": {
     "@semantic-release/commit-analyzer": "12.0.0",
