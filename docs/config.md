@@ -31,7 +31,7 @@ In `docker-compose.yml`:
 
 ## Frontend
 
-The frontend uses the backend base URL resolved by `frontend-vue/src/config.ts`:
+The frontend uses the backend base URL resolved by `frontend/src/config.ts`:
 - If `window.STOERGELER_BACKEND_URL` is set, it is used.
 - Otherwise it uses the current host with `/api` appended.
 
