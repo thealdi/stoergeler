@@ -2,8 +2,18 @@
   "branches": ["main"],
   "tagFormat": "backend-v${version}",
   "plugins": [
-    "@semantic-release/commit-analyzer",
-    "@semantic-release/release-notes-generator",
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "config": "./config/conventional-changelog.mjs"
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "config": "./config/conventional-changelog.mjs"
+      }
+    ],
     "@semantic-release/github"
   ]
 }
