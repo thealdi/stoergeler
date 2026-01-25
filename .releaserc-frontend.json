@@ -5,35 +5,13 @@
     [
       "@semantic-release/commit-analyzer",
       {
-        "preset": "conventionalcommits",
-        "presetConfig": {
-          "types": [
-            { "type": "feat", "section": "Features", "hidden": false },
-            { "type": "fix", "section": "Bug Fixes", "hidden": false },
-            { "type": "perf", "section": "Performance Improvements", "hidden": false },
-            { "type": "refactor", "section": "Refactors", "hidden": false },
-            { "type": "docs", "section": "Documentation", "hidden": false },
-            { "type": "test", "section": "Tests", "hidden": false },
-            { "type": "chore", "section": "Chores", "hidden": false }
-          ]
-        }
+        "config": "./config/conventional-changelog.cjs"
       }
     ],
     [
       "@semantic-release/release-notes-generator",
       {
-        "preset": "conventionalcommits",
-        "presetConfig": {
-          "types": [
-            { "type": "feat", "section": "Features", "hidden": false },
-            { "type": "fix", "section": "Bug Fixes", "hidden": false },
-            { "type": "perf", "section": "Performance Improvements", "hidden": false },
-            { "type": "refactor", "section": "Refactors", "hidden": false },
-            { "type": "docs", "section": "Documentation", "hidden": false },
-            { "type": "test", "section": "Tests", "hidden": false },
-            { "type": "chore", "section": "Chores", "hidden": false }
-          ]
-        }
+        "config": "./config/conventional-changelog.cjs"
       }
     ],
     "@semantic-release/github"
