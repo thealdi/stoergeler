@@ -35,7 +35,12 @@ jobs:
         uses: cycjimmy/semantic-release-action@v4
         with:
           semantic_version: 24.2.9
-          extends: ./config/release-frontend.cjs
+          working_directory: ./frontend
+          extra_plugins: |
+            @semantic-release/commit-analyzer
+            @semantic-release/release-notes-generator
+            @semantic-release/github
+            conventional-changelog-angular
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
