@@ -183,3 +183,6 @@ cython_debug/
 
 # Internal development notes
 docs-dev/
+.env.portainer
+scripts/portainer-redeploy.sh
+.vscode/tasks.json
