@@ -1,7 +1,12 @@
 <template>
   <NCard size="small" :bordered="true">
     <template #header>
-      <NFlex align="center" justify="space-between" :wrap="isMobile" class="calendar-toolbar">
+      <NFlex
+        align="center"
+        justify="space-between"
+        :wrap="isMobile"
+        class="calendar-toolbar"
+      >
         <NInputGroup size="small" class="calendar-toolbar__group">
           <NButton size="small" @click="calendarActions.prev">‹</NButton>
           <NDatePicker
@@ -162,7 +167,6 @@ watch(
 
 @media (max-width: 768px) {
   .calendar-toolbar {
-    flex-wrap: wrap;
     align-items: flex-start;
   }
 
@@ -170,6 +174,10 @@ watch(
   .calendar-toolbar__views {
     width: 100%;
     justify-content: flex-start;
+  }
+
+  .calendar-toolbar__group :deep(.n-input) {
+    flex: 1 1 auto;
   }
 }
 </style>

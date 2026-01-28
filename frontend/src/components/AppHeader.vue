@@ -80,11 +80,16 @@ function goHome() {
 
 <style scoped>
 .app-header {
-  padding: 16px 24px;
+  min-height: 56px;
+  padding: 8px 24px;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
 }
 
 .app-header__row {
   flex-wrap: nowrap;
+  width: 100%;
 }
 
 .app-header__left {
@@ -96,8 +101,8 @@ function goHome() {
 }
 
 .app-header__logo-frame {
-  width: 180px;
-  height: 50px;
+  width: 42px;
+  height: 42px;
   overflow: hidden;
   display: flex;
   align-items: center;
@@ -107,8 +112,8 @@ function goHome() {
 .app-header__logo-img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
-  object-position: left center;
+  object-fit: contain;
+  object-position: center;
   display: block;
 }
 
@@ -129,21 +134,29 @@ function goHome() {
 
 @media (max-width: 768px) {
   .app-header {
-    padding: 12px 16px;
+    min-height: 52px;
+    padding: 8px 16px;
   }
 
   .app-header__row {
     gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .app-header__left {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .app-header__logo-frame {
-    width: 120px;
+    width: 36px;
     height: 36px;
   }
 
   .app-header__actions {
     width: 100%;
     justify-content: flex-start;
+    flex-wrap: wrap;
   }
 }
 </style>
