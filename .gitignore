@@ -186,3 +186,5 @@ docs-dev/
 .env.portainer
 scripts/portainer-redeploy.sh
 .vscode/tasks.json
+node_modules/
+frontend/node_modules/
