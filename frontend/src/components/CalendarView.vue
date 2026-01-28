@@ -8,7 +8,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import FullCalendar from '@fullcalendar/vue3';
 import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
@@ -18,6 +18,7 @@ import type { EventClickArg, EventInput, EventMountArg } from '@fullcalendar/cor
 import deLocale from '@fullcalendar/core/locales/de';
 import type { OutageWindow } from '../api/types';
 import { formatRangeLabel } from '../utils/format';
+import { useIsMobile } from '../composables/useBreakpoints';
 
 const props = defineProps<{
   outages: OutageWindow[];
@@ -78,10 +79,12 @@ function handleEventClick(info: EventClickArg) {
   emit('select-outage', { eventId: event.id, start, end, label });
 }
 
+const isMobile = useIsMobile();
+
 const calendarOptions = computed(() => ({
   plugins: [dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin],
   locale: deLocale,
-  initialView: 'timeGridWeek',
+  initialView: isMobile.value ? 'listWeek' : 'timeGridWeek',
   headerToolbar: false as const,
   height: 'auto',
   eventMinHeight: 20,
@@ -152,6 +155,18 @@ function getCurrentDate() {
 function getTitle() {
   return getApi()?.view?.title ?? '';
 }
+
+watch(
+  isMobile,
+  (mobile) => {
+    const current = getCurrentView();
+    const desired = mobile ? 'listWeek' : 'timeGridWeek';
+    if (current !== desired) {
+      changeView(desired);
+    }
+  },
+  { immediate: true }
+);
 
 defineExpose({
   goPrev,

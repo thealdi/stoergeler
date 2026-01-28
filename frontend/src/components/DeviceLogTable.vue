@@ -1,6 +1,8 @@
 <template>
   <NCard size="small" :bordered="true">
-    <NDataTable :columns="columns" :data="sortedEntries" :bordered="false" />
+    <div class="data-table-wrap">
+      <NDataTable :columns="columns" :data="sortedEntries" :bordered="false" />
+    </div>
     <template #footer v-if="props.pageCount > 1">
       <NPagination
         size="small"
@@ -60,3 +62,15 @@ function formatTimestamp(timestamp?: string | null) {
   return formatDate(timestamp);
 }
 </script>
+
+<style scoped>
+.data-table-wrap {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .data-table-wrap {
+    overflow-x: auto;
+  }
+}
+</style>

@@ -1,20 +1,25 @@
 <template>
   <NCard size="small" :bordered="true">
     <template #header>
-      <NFlex align="center" justify="space-between" :wrap="false">
-        <NInputGroup size="small">
+      <NFlex
+        align="center"
+        justify="space-between"
+        :wrap="isMobile"
+        class="calendar-toolbar"
+      >
+        <NInputGroup size="small" class="calendar-toolbar__group">
           <NButton size="small" @click="calendarActions.prev">‹</NButton>
           <NDatePicker
             :key="datePickerType"
             size="small"
             :type="datePickerType"
             :value="datePickerValue"
-            :style="{ width: '160px' }"
+            :style="{ width: isMobile ? '120px' : '160px' }"
             @update:value="handleDatePick"
           />
           <NButton size="small" @click="calendarActions.next">›</NButton>
         </NInputGroup>
-        <NButtonGroup size="small">
+        <NButtonGroup size="small" class="calendar-toolbar__views">
           <NButton
             :type="currentView === 'dayGridMonth' ? 'primary' : 'default'"
             @click="calendarActions.view('dayGridMonth')"
@@ -44,7 +49,7 @@
       @select-outage="handleSelectOutage"
     />
   </NCard>
-  <NDrawer v-model:show="drawerOpen" :width="520" @update:show="handleDrawerUpdate">
+  <NDrawer v-model:show="drawerOpen" :width="drawerWidth" @update:show="handleDrawerUpdate">
     <NDrawerContent closable>
       <template #header>
         Fritz-Logs{{ drawerTitle ? ` – ${drawerTitle}` : '' }}
@@ -74,6 +79,7 @@ import {
 import type { DeviceLogEntry } from '../api/types';
 import CalendarView from '../components/CalendarView.vue';
 import DeviceLogTable from '../components/DeviceLogTable.vue';
+import { useIsMobile } from '../composables/useBreakpoints';
 import { useCalendarHeader } from '../composables/useCalendarHeader';
 import { usePagination } from '../composables/usePagination';
 import { useStoergelerState } from '../composables/useStoergelerState';
@@ -87,6 +93,7 @@ const selectedRange = ref<{ start: Date; end: Date; label: string } | null>(null
 const drawerOpen = ref(false);
 const calendarRef = ref<InstanceType<typeof CalendarView> | null>(null);
 const drawerPaginator = usePagination<DeviceLogEntry>([], 20);
+const isMobile = useIsMobile();
 const {
   currentView,
   datePickerType,
@@ -136,6 +143,7 @@ const drawerPageItems = computed(() => drawerPaginator.pageItems.value);
 const drawerPage = computed(() => drawerPaginator.currentPage.value + 1);
 const drawerPageCount = computed(() => drawerPaginator.totalPages.value);
 const drawerTitle = computed(() => selectedRange.value?.label ?? '');
+const drawerWidth = computed(() => (isMobile.value ? '100%' : 520));
 
 function setDrawerPage(page: number) {
   drawerPaginator.currentPage.value = page - 1;
@@ -150,3 +158,26 @@ watch(
 );
 
 </script>
+
+<style scoped>
+.calendar-toolbar {
+  width: 100%;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .calendar-toolbar {
+    align-items: flex-start;
+  }
+
+  .calendar-toolbar__group,
+  .calendar-toolbar__views {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .calendar-toolbar__group :deep(.n-input) {
+    flex: 1 1 auto;
+  }
+}
+</style>
