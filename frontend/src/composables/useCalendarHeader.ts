@@ -15,10 +15,13 @@ export function useCalendarHeader(calendarRef: { value: CalendarRef }) {
   const datePickerType = computed(() => {
     switch (currentView.value) {
       case 'dayGridMonth':
+      case 'listMonth':
         return 'month';
       case 'timeGridWeek':
+      case 'listWeek':
         return 'week';
       case 'timeGridDay':
+      case 'listDay':
         return 'date';
       default:
         return 'date';
