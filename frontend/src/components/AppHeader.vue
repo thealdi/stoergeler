@@ -1,7 +1,7 @@
 <template>
   <NLayoutHeader bordered class="app-header">
-    <NFlex align="center" justify="space-between" :wrap="false" class="app-header__row">
-      <NFlex align="center" gap="12" :wrap="false" class="app-header__left">
+    <NFlex align="center" justify="space-between" :wrap="isMobile" class="app-header__row">
+      <NFlex align="center" gap="12" :wrap="isMobile" class="app-header__left">
         <NButton text :focusable="false" class="app-header__logo" @click="goHome">
           <div class="app-header__logo-frame">
             <img :src="logoUrl" alt="StoerGeler" class="app-header__logo-img" />
@@ -14,7 +14,7 @@
           class="app-header__menu"
         />
       </NFlex>
-      <NFlex align="center" justify="end" gap="12" :wrap="false" class="app-header__actions">
+      <NFlex align="center" justify="end" gap="12" :wrap="isMobile" class="app-header__actions">
         <NText depth="3" class="app-header__version">
           UI {{ uiVersion }} · API {{ backendVersion }}
         </NText>
@@ -34,6 +34,7 @@ import { computed } from 'vue';
 import type { MenuOption } from 'naive-ui';
 import { NButton, NFlex, NLayoutHeader, NMenu, NText } from 'naive-ui';
 import logoUrl from '../assets/logo.png';
+import { useIsMobile } from '../composables/useBreakpoints';
 
 const props = defineProps<{
   activeMenu: string;
@@ -54,6 +55,8 @@ const menuValue = computed({
   get: () => props.activeMenu,
   set: (value: string) => emit('update:activeMenu', value),
 });
+
+const isMobile = useIsMobile();
 
 function goHome() {
   emit('update:activeMenu', 'home');
@@ -107,5 +110,25 @@ function goHome() {
 .app-header__version {
   font-size: 12px;
   white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 12px 16px;
+  }
+
+  .app-header__row {
+    gap: 12px;
+  }
+
+  .app-header__logo-frame {
+    width: 120px;
+    height: 36px;
+  }
+
+  .app-header__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 </style>

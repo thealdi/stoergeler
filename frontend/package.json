@@ -15,6 +15,7 @@
     "@fullcalendar/list": "^6.1.20",
     "@fullcalendar/timegrid": "^6.1.20",
     "@fullcalendar/vue3": "^6.1.20",
+    "@vueuse/core": "^14.1.0",
     "naive-ui": "^2.43.2",
     "vue": "^3.5.24"
   },
@@ -27,7 +28,9 @@
     "vue-tsc": "^3.1.4"
   },
   "release": {
-    "branches": ["main"],
+    "branches": [
+      "main"
+    ],
     "tagFormat": "frontend-v${version}",
     "plugins": [
       [
@@ -35,10 +38,25 @@
         {
           "preset": "angular",
           "releaseRules": [
-            { "scope": "frontend", "release": "minor" },
-            { "scope": "frontend", "type": "fix", "release": "patch" },
-            { "scope": "frontend", "type": "perf", "release": "patch" },
-            { "scope": "frontend", "breaking": true, "release": "major" }
+            {
+              "scope": "frontend",
+              "release": "minor"
+            },
+            {
+              "scope": "frontend",
+              "type": "fix",
+              "release": "patch"
+            },
+            {
+              "scope": "frontend",
+              "type": "perf",
+              "release": "patch"
+            },
+            {
+              "scope": "frontend",
+              "breaking": true,
+              "release": "major"
+            }
           ]
         }
       ],

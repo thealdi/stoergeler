@@ -1,6 +1,8 @@
 <template>
   <NCard size="small" :bordered="true">
-    <NDataTable :columns="columns" :data="entries" :bordered="false" />
+    <div class="data-table-wrap">
+      <NDataTable :columns="columns" :data="entries" :bordered="false" />
+    </div>
     <template #footer v-if="props.pageCount > 1">
       <NPagination
         size="small"
@@ -52,3 +54,15 @@ const columns = computed<DataTableColumns<OutageWindow>>(() => [
   },
 ]);
 </script>
+
+<style scoped>
+.data-table-wrap {
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .data-table-wrap {
+    overflow-x: auto;
+  }
+}
+</style>
