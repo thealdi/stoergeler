@@ -8,11 +8,25 @@
           </div>
         </NButton>
         <NMenu
+          v-if="!isMobile"
           mode="horizontal"
           :options="menuOptions"
           v-model:value="menuValue"
           class="app-header__menu"
         />
+        <NDropdown
+          v-else
+          :options="menuOptions"
+          :value="menuValue"
+          trigger="click"
+          @select="(value) => (menuValue = value)"
+        >
+          <NButton size="small" aria-label="Menü öffnen">
+            <NIcon size="18">
+              <MenuOutline />
+            </NIcon>
+          </NButton>
+        </NDropdown>
       </NFlex>
       <NFlex align="center" justify="end" gap="12" :wrap="isMobile" class="app-header__actions">
         <NText depth="3" class="app-header__version">
@@ -32,7 +46,8 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { MenuOption } from 'naive-ui';
-import { NButton, NFlex, NLayoutHeader, NMenu, NText } from 'naive-ui';
+import { NButton, NDropdown, NFlex, NIcon, NLayoutHeader, NMenu, NText } from 'naive-ui';
+import { MenuOutline } from '@vicons/ionicons5';
 import logoUrl from '../assets/logo.png';
 import { useIsMobile } from '../composables/useBreakpoints';
 
