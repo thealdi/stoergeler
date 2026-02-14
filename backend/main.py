@@ -4,6 +4,7 @@ from typing import Dict, Optional
 import os
 
 from fastapi import FastAPI, HTTPException, Query
+from starlette.status import HTTP_201_CREATED
 from fastapi.middleware.cors import CORSMiddleware
 
 from .config import settings
@@ -13,6 +14,8 @@ from .schemas import (
     ConnectivityStatus,
     DeviceLogEntry,
     DeviceLogResponse,
+    OutageCreate,
+    OutageCreateResponse,
     OutageListResponse,
     OutageWindow,
     StatusResponse,
@@ -140,6 +143,32 @@ def outage_windows(
         for record in stored_outages
     ]
     return OutageListResponse(outages=windows)
+
+
+@app.post("/outages", response_model=OutageCreateResponse, status_code=HTTP_201_CREATED)
+def create_outage(body: OutageCreate) -> OutageCreateResponse:
+    try:
+        outage_id = outage_repository.create_outage(
+            start_time=body.start,
+            end_time=body.end,
+            status=body.status,
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    duration = None
+    if body.end:
+        duration = max(1, int((body.end - body.start).total_seconds()))
+
+    return OutageCreateResponse(
+        id=outage_id,
+        outage=OutageWindow(
+            start=body.start,
+            end=body.end,
+            duration_seconds=duration,
+            status=body.status,
+        ),
+    )
 
 
 @app.get("/connection-check", response_model=ConnectivityStatus)

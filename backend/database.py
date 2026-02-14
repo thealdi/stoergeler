@@ -58,6 +58,7 @@ class DatabaseContext:
                     end_time TEXT,
                     duration_seconds INTEGER,
                     status TEXT NOT NULL,
+                    source TEXT NOT NULL DEFAULT 'calculated',
                     start_log_entry_id INTEGER,
                     end_log_entry_id INTEGER,
                     created_at TEXT NOT NULL,
@@ -67,6 +68,11 @@ class DatabaseContext:
                 )
                 """
             )
+            # Migration: add source column to existing databases
+            try:
+                conn.execute("ALTER TABLE outages ADD COLUMN source TEXT NOT NULL DEFAULT 'calculated'")
+            except sqlite3.OperationalError:
+                pass  # Column already exists
             conn.commit()
 
 
@@ -202,7 +208,7 @@ class OutageRepository:
     def replace_outages(self, outages: Iterable[dict[str, Any]]) -> None:
         timestamp = datetime.utcnow().isoformat()
         with self._context.connect() as conn:
-            conn.execute("DELETE FROM outages")
+            conn.execute("DELETE FROM outages WHERE source = 'calculated'")
             for outage in outages:
                 conn.execute(
                     """
@@ -260,3 +266,38 @@ class OutageRepository:
                 )
             )
         return records
+
+    def create_outage(
+        self,
+        start_time: datetime,
+        end_time: Optional[datetime] = None,
+        duration_seconds: Optional[int] = None,
+        status: str = "manual",
+    ) -> int:
+        """Insert a single manually-created outage and return its row ID."""
+        if end_time and duration_seconds is None:
+            duration_seconds = max(1, int((end_time - start_time).total_seconds()))
+
+        now = datetime.utcnow().isoformat()
+        with self._context.connect() as conn:
+            cursor = conn.execute(
+                """
+                INSERT INTO outages (
+                    start_time, end_time, duration_seconds,
+                    status, source,
+                    start_log_entry_id, end_log_entry_id,
+                    created_at, updated_at
+                )
+                VALUES (?, ?, ?, ?, 'manual', NULL, NULL, ?, ?)
+                """,
+                (
+                    start_time.isoformat(),
+                    end_time.isoformat() if end_time else None,
+                    duration_seconds,
+                    status,
+                    now,
+                    now,
+                ),
+            )
+            conn.commit()
+            return cursor.lastrowid  # type: ignore[return-value]
