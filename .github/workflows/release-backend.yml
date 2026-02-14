@@ -1,15 +1,16 @@
 name: Backend Release
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - "backend/**"
-      - "Dockerfile"
-      - "requirements.txt"
-      - "config/release-backend.cjs"
-      - ".github/workflows/release-backend.yml"
+      - 'backend/**'
+      - 'Dockerfile'
+      - 'requirements.txt'
+      - 'config/release-backend.cjs'
+      - '.github/workflows/release-backend.yml'
 
 permissions:
   contents: write
@@ -27,7 +28,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Install release dependencies
         run: npm ci
