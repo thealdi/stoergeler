@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Dict, List, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
@@ -46,6 +46,17 @@ class OutageWindow(BaseModel):
 
 class OutageListResponse(BaseModel):
     outages: List[OutageWindow]
+
+
+class OutageCreate(BaseModel):
+    start: datetime = Field(description="Beginn der Störung")
+    end: Optional[datetime] = Field(default=None, description="Ende der Störung (leer = noch offen)")
+    status: str = Field(default="manual", description="Status der Störung (z.B. manual, closed, open)")
+
+
+class OutageCreateResponse(BaseModel):
+    id: int = Field(description="ID des neu erstellten Outage-Eintrags")
+    outage: OutageWindow
 
 
 class ConnectivityStatus(BaseModel):
