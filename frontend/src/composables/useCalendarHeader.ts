@@ -2,6 +2,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 type CalendarRef = {
   goPrev: () => void;
   goNext: () => void;
+  goToday: () => void;
   changeView: (viewName: string) => void;
   gotoDate: (date: Date) => void;
   getCurrentView: () => string;
@@ -48,6 +49,10 @@ export function useCalendarHeader(calendarRef: { value: CalendarRef }) {
     },
     next: () => {
       calendarRef.value?.goNext();
+      syncCalendarHeader();
+    },
+    today: () => {
+      calendarRef.value?.goToday();
       syncCalendarHeader();
     },
     view: (viewName: string) => {
