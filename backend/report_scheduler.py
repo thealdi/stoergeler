@@ -63,8 +63,19 @@ class ReportScheduler:
         html_content = self._reporting_service.render_weekly_report(data)
         
         subject = f"StoerGeler Wochen-Report (KW {data['week_number']})"
+        body_text = self._settings.report_email_body.format(
+            week_number=data["week_number"],
+            start_date=data["start"].strftime("%d.%m.%Y"),
+            end_date=data["end"].strftime("%d.%m.%Y"),
+        )
+        filename = f"verbindungs_report_kw{data['week_number']}.html"
         
-        await self._email_service.send_report(subject, html_content)
+        await self._email_service.send_report(
+            subject=subject, 
+            html_content=html_content,
+            body_text=body_text,
+            filename=filename
+        )
         
         self._metadata_repo.set("last_weekly_report_sent_at", current_week_key)
         logger.info(f"Weekly report for {current_week_key} sent successfully.")

@@ -59,6 +59,10 @@ class Settings:
 
     # Reporting Settings
     report_recipients: tuple[str, ...] = _parse_csv_env("REPORT_RECIPIENTS", ())
+    report_email_body: str = os.getenv(
+        "REPORT_EMAIL_BODY", 
+        "Hallo,\n\nanbei erhalten Sie den Verbindungs-Report für die Kalenderwoche {week_number} ({start_date} bis {end_date}).\n\nIhre StoerGeler Instanz"
+    )
     report_schedule_check_interval_seconds: int = int(
         os.getenv("REPORT_SCHEDULE_CHECK_INTERVAL_SECONDS", "3600")
     )
