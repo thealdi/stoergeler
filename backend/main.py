@@ -6,9 +6,16 @@ import os
 from fastapi import FastAPI, HTTPException, Query
 from starlette.status import HTTP_201_CREATED
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
 
 from .config import settings
-from .database import DatabaseContext, DeviceLogRepository, OutageRepository, StatusRepository
+from .database import (
+    DatabaseContext,
+    DeviceLogRepository,
+    MetadataRepository,
+    OutageRepository,
+    StatusRepository,
+)
 from .device_log_sync import DeviceLogSync
 from .schemas import (
     ConnectivityStatus,
@@ -24,6 +31,9 @@ from .outage_calculator import OutageCalculator
 from .outage_config import OutageKeywords
 from .fritzbox_client import FritzBoxCredentials, FritzboxClient
 from .tracker import ConnectionTracker
+from .reporting import ReportingService, get_current_week_range, get_last_week_range
+from .email_service import EmailService
+from .report_scheduler import ReportScheduler
 
 app = FastAPI(title="StoerGeler Backend", root_path="/api")
 app.add_middleware(
@@ -38,6 +48,8 @@ db_context.init_schema()
 status_repository = StatusRepository(db_context)
 device_log_repository = DeviceLogRepository(db_context)
 outage_repository = OutageRepository(db_context)
+metadata_repository = MetadataRepository(db_context)
+
 outage_calculator = OutageCalculator(
     cfg=OutageKeywords(
         planned_keywords=settings.outage_planned_keywords,
@@ -69,15 +81,29 @@ tracker = ConnectionTracker(
     device_log_poll_interval_seconds=settings.device_log_poll_interval_seconds,
 )
 
+reporting_service = ReportingService(
+    outage_repository=outage_repository,
+    device_log_repository=device_log_repository,
+)
+email_service = EmailService(settings)
+report_scheduler = ReportScheduler(
+    settings=settings,
+    metadata_repository=metadata_repository,
+    reporting_service=reporting_service,
+    email_service=email_service,
+)
+
 
 @app.on_event("startup")
 async def _startup() -> None:
     await tracker.start()
+    await report_scheduler.start()
 
 
 @app.on_event("shutdown")
 async def _shutdown() -> None:
     await tracker.stop()
+    await report_scheduler.stop()
 
 
 @app.get("/health")
@@ -178,6 +204,34 @@ def connection_check() -> ConnectivityStatus:
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return ConnectivityStatus(**status)
+
+
+@app.get("/report/weekly", response_class=HTMLResponse)
+def get_weekly_report(
+    scope: str = Query(default="last", enum=["last", "current"], description="Woche auswählen")
+) -> HTMLResponse:
+    """Gibt den Wochen-Report als HTML zurück."""
+    try:
+        start, end = get_last_week_range() if scope == "last" else get_current_week_range()
+        data = reporting_service.get_report_data(start, end)
+        html = reporting_service.render_weekly_report(data)
+        return HTMLResponse(content=html)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
+@app.post("/report/send-test-email")
+async def send_test_report_email() -> Dict[str, str]:
+    """Sendet einen Test-Report per E-Mail."""
+    try:
+        start, end = get_last_week_range()
+        data = reporting_service.get_report_data(start, end)
+        html = reporting_service.render_weekly_report(data)
+        subject = f"StoerGeler Test-Report (KW {data['week_number']})"
+        await email_service.send_report(subject, html)
+        return {"status": "sent"}
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @app.get("/version")

@@ -1,16 +1,19 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable, Optional
+import inspect
+from typing import Any, Awaitable, Callable, Optional, Union
 
 
 class PeriodicRunner:
-    """Runs a blocking callable on a fixed interval in a background task."""
+    """Runs a callable on a fixed interval in a background task.
+    Supports both sync (blocking) and async callables.
+    """
 
     def __init__(
         self,
         interval_seconds: int,
-        work: Callable[[], None],
+        work: Union[Callable[[], None], Callable[[], Awaitable[None]]],
         on_error: Optional[Callable[[Exception], None]] = None,
     ) -> None:
         self._interval = interval_seconds
@@ -35,8 +38,11 @@ class PeriodicRunner:
     async def _run(self) -> None:
         while not self._stop_event.is_set():
             try:
-                loop = asyncio.get_running_loop()
-                await loop.run_in_executor(None, self._work)
+                if inspect.iscoroutinefunction(self._work):
+                    await self._work()
+                else:
+                    loop = asyncio.get_running_loop()
+                    await loop.run_in_executor(None, self._work)
             except Exception as exc:  # noqa: BLE001
                 if self._on_error is not None:
                     self._on_error(exc)

@@ -68,11 +68,39 @@ class DatabaseContext:
                 )
                 """
             )
+            conn.execute(
+                """
+                CREATE TABLE IF NOT EXISTS metadata (
+                    key TEXT PRIMARY KEY,
+                    value TEXT
+                )
+                """
+            )
             # Migration: add source column to existing databases
             try:
                 conn.execute("ALTER TABLE outages ADD COLUMN source TEXT NOT NULL DEFAULT 'calculated'")
             except sqlite3.OperationalError:
                 pass  # Column already exists
+            conn.commit()
+
+
+class MetadataRepository:
+    """Stores general application metadata."""
+
+    def __init__(self, context: DatabaseContext) -> None:
+        self._context = context
+
+    def get(self, key: str) -> Optional[str]:
+        with self._context.connect() as conn:
+            row = conn.execute("SELECT value FROM metadata WHERE key = ?", (key,)).fetchone()
+        return row["value"] if row else None
+
+    def set(self, key: str, value: str) -> None:
+        with self._context.connect() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO metadata (key, value) VALUES (?, ?)",
+                (key, value),
+            )
             conn.commit()
 
 
@@ -166,17 +194,27 @@ class DeviceLogRepository:
         *,
         limit: Optional[int] = None,
         ascending: bool = True,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
     ) -> List[DeviceLogEntryRecord]:
         order_clause = "ASC" if ascending else "DESC"
         query = (
             "SELECT id, log_timestamp, message, raw, source"
             " FROM device_log_entries"
-            f" ORDER BY log_timestamp {order_clause}"
+            " WHERE 1=1"
         )
-        params: Sequence[Any] = ()
+        params: list[Any] = []
+        if start is not None:
+            query += " AND log_timestamp >= ?"
+            params.append(start.isoformat())
+        if end is not None:
+            query += " AND log_timestamp <= ?"
+            params.append(end.isoformat())
+
+        query += f" ORDER BY log_timestamp {order_clause}"
         if limit is not None:
             query += " LIMIT ?"
-            params = (limit,)
+            params.append(limit)
 
         with self._context.connect() as conn:
             rows = conn.execute(query, params).fetchall()
@@ -237,11 +275,25 @@ class OutageRepository:
                 )
             conn.commit()
 
-    def list_outages(self) -> List[OutageRecord]:
+    def list_outages(
+        self,
+        *,
+        start: Optional[datetime] = None,
+        end: Optional[datetime] = None,
+    ) -> List[OutageRecord]:
+        query = "SELECT start_time, end_time, duration_seconds, status FROM outages WHERE 1=1"
+        params: list[str] = []
+        if start is not None:
+            query += " AND start_time >= ?"
+            params.append(start.isoformat())
+        if end is not None:
+            query += " AND start_time <= ?"
+            params.append(end.isoformat())
+
+        query += " ORDER BY start_time ASC"
+
         with self._context.connect() as conn:
-            rows = conn.execute(
-                "SELECT start_time, end_time, duration_seconds, status FROM outages ORDER BY start_time ASC"
-            ).fetchall()
+            rows = conn.execute(query, params).fetchall()
 
         records: List[OutageRecord] = []
         for row in rows:
