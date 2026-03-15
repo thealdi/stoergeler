@@ -3,3 +3,5 @@ uvicorn[standard]
 fritzconnection
 pydantic
 python-dotenv
+Jinja2
+aiosmtplib

@@ -47,3 +47,21 @@ export async function fetchConnectionStatus(): Promise<ConnectivityStatus> {
 export async function fetchBackendVersion(): Promise<BackendVersion> {
   return request<BackendVersion>('/version');
 }
+
+export async function fetchWeeklyReport(scope: 'last' | 'current' = 'last'): Promise<string> {
+  const url = `${backendBaseUrl}/report/weekly?scope=${scope}`;
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Fehler beim Abrufen des Reports');
+  }
+  return response.text();
+}
+
+export async function sendTestEmail(): Promise<{ status: string }> {
+  const url = `${backendBaseUrl}/report/send-test-email`;
+  const response = await fetch(url, { method: 'POST' });
+  if (!response.ok) {
+    throw new Error('Fehler beim Senden der Test-Email');
+  }
+  return response.json();
+}

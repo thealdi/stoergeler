@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <title>Verbindungs-Report (KW {{ week_number }})</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.5; color: #333; max-width: 900px; margin: 40px auto; padding: 0 20px; }
+        h1, h2 { color: #111; border-bottom: 2px solid #eee; padding-bottom: 8px; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin: 20px 0; }
+        .kpi-card { border: 1px solid #eee; padding: 15px; border-radius: 8px; background: #fafafa; }
+        .kpi-val { font-size: 20px; font-weight: bold; color: #222; }
+        .kpi-label { font-size: 12px; color: #666; margin-bottom: 4px; }
+        .calendar-week { display: flex; border: 1px solid #ddd; height: 120px; border-radius: 8px; overflow: hidden; margin: 20px 0; }
+        .calendar-day { flex: 1; border-right: 1px solid #ddd; padding: 8px; position: relative; background: #fff; }
+        .calendar-day:last-child { border-right: none; }
+        .day-label { font-size: 11px; font-weight: bold; margin-bottom: 4px; color: #888; text-transform: uppercase; }
+        .outage-mark { position: absolute; left: 0; right: 0; height: 4px; background: #ef4444; }
+        .outage-mark.planned { background: #3b82f6; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px; }
+        th, td { text-align: left; padding: 10px; border-bottom: 1px solid #eee; }
+        th { background: #f8f8f8; color: #555; }
+        .status-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; }
+        .status-unplanned { background: #fee2e2; color: #991b1b; }
+        .status-planned { background: #dbeafe; color: #1e40af; }
+    </style>
+</head>
+<body>
+    <h1>StoerGeler Verbindungs-Report</h1>
+    <p>Berichtszeitraum: <strong>{{ start | format_date }}</strong> bis <strong>{{ end | format_date }}</strong></p>
+
+    <div class="kpi-grid">
+        <div class="kpi-card">
+            <div class="kpi-label">Uptime (%)</div>
+            <div class="kpi-val">{{ availability | round(3) }}%</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Störungen (Ungeplant)</div>
+            <div class="kpi-val">{{ incident_count }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Gesamte Downtime</div>
+            <div class="kpi-val">{{ total_downtime | format_duration }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Max. Ausfallzeit</div>
+            <div class="kpi-val">{{ max_downtime | format_duration }}</div>
+        </div>
+    </div>
+
+    <div class="kpi-grid" style="margin-top: -10px;">
+        <div class="kpi-card">
+            <div class="kpi-label">Geplante Wartungen</div>
+            <div class="kpi-val">{{ planned_count }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">Geplante Downtime</div>
+            <div class="kpi-val">{{ planned_downtime | format_duration }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">MTTR (Reparatur)</div>
+            <div class="kpi-val">{{ mttr | format_duration }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-label">MTBF (Betrieb)</div>
+            <div class="kpi-val">{{ mtbf | format_duration }}</div>
+        </div>
+    </div>
+
+    <h2>Wochen-Überblick</h2>
+    <div class="calendar-week">
+        {% for day_name, day_outages in weekly_overview %}
+            <div class="calendar-day">
+                <div class="day-label">{{ day_name }}</div>
+                {% for o in day_outages %}
+                    {% set top = (o.start_time.hour * 60 + o.start_time.minute) / 1440 * 100 %}
+                    <div class="outage-mark {{ 'planned' if o.status.startswith('planned') else '' }}" 
+                         style="top: {{ top }}%;" 
+                         title="{{ o.duration_seconds | format_duration }}"></div>
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <h2>Störungs-Historie</h2>
+    <table>
+        <thead><tr><th>Beginn</th><th>Ende</th><th>Dauer</th><th>Typ</th></tr></thead>
+        <tbody>
+            {% for o in outages %}
+                <tr>
+                    <td>{{ o.start_time | format_date }}</td>
+                    <td>{{ o.end_time | format_date if o.end_time else 'läuft noch' }}</td>
+                    <td>{{ o.duration_seconds | format_duration }}</td>
+                    <td><span class="status-badge {{ 'status-planned' if o.status.startswith('planned') else 'status-unplanned' }}">
+                        {{ 'Geplant' if o.status.startswith('planned') else 'Ungeplant' }}
+                    </span></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="4">Keine Störungen in diesem Zeitraum.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2>Ereignis-Log</h2>
+    <table>
+        <thead><tr><th>Zeitpunkt</th><th>Nachricht</th></tr></thead>
+        <tbody>
+            {% for l in logs %}
+                <tr>
+                    <td style="white-space: nowrap;">{{ l.timestamp | format_date }}</td>
+                    <td>{{ l.message or l.raw }}</td>
+                </tr>
+            {% else %}
+                <tr><td colspan="2">Keine Log-Einträge in dieser Zeitraum.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

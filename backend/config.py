@@ -48,5 +48,24 @@ class Settings:
         "OUTAGE_IPV6_CONNECT_KEYWORDS", DEFAULT_OUTAGE_KEYWORDS.ipv6_connect_keywords
     )
 
+    # SMTP Settings
+    smtp_server: str = os.getenv("SMTP_SERVER", "")
+    smtp_port: int = int(os.getenv("SMTP_PORT", "587"))
+    smtp_username: str = os.getenv("SMTP_USERNAME", "")
+    smtp_password: str = os.getenv("SMTP_PASSWORD", "")
+    smtp_from: str = os.getenv("SMTP_FROM", "noreply@stoergeler.local")
+    smtp_tls: bool = os.getenv("SMTP_TLS", "True").lower() == "true"
+    smtp_ssl: bool = os.getenv("SMTP_SSL", "False").lower() == "true"
+
+    # Reporting Settings
+    report_recipients: tuple[str, ...] = _parse_csv_env("REPORT_RECIPIENTS", ())
+    report_email_body: str = os.getenv(
+        "REPORT_EMAIL_BODY", 
+        "Hallo,\n\nanbei erhalten Sie den Verbindungs-Report für die Kalenderwoche {week_number} ({start_date} bis {end_date}).\n\nIhre StoerGeler Instanz"
+    )
+    report_schedule_check_interval_seconds: int = int(
+        os.getenv("REPORT_SCHEDULE_CHECK_INTERVAL_SECONDS", "3600")
+    )
+
 
 settings = Settings()
