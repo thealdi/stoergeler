@@ -1,5 +1,6 @@
 <template>
   <NSpace vertical size="large">
+    <div style="font-size: 10px; color: #ccc">Debug: {{ state.outages.length }} outages, {{ state.logs.length }} logs</div>
     <NCard title="Verfügbarkeit & Stabilitäts-KPIs" :bordered="true">
       <template #header-extra>
         <NFlex align="center">
@@ -205,13 +206,13 @@ const plannedOutages = computed(() =>
 
 const totalTimeSeconds = computed(() => {
   if (state.outages.length === 0) return 0;
-  // Compute time from first record until now
-  const firstOutage = state.outages[state.outages.length - 1];
-  if (!firstOutage || !firstOutage.start) return 0;
-  const startMs = new Date(firstOutage.start).getTime();
+  // Find the truly oldest record (min start time) regardless of array order
+  const timestamps = state.outages.map(o => new Date(o.start).getTime());
+  const minTs = Math.min(...timestamps);
   const nowMs = Date.now();
-  return Math.max(1, (nowMs - startMs) / 1000);
+  return Math.max(1, (nowMs - minTs) / 1000);
 });
+
 
 const totalDowntimeSeconds = computed(() =>
   unplannedOutages.value.reduce((acc, o) => acc + (o.duration_seconds || 0), 0)

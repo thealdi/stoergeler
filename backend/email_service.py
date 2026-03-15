@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 import logging
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from typing import List
 
-from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
+import aiosmtplib
 
 from .config import Settings
 
@@ -11,20 +13,10 @@ logger = logging.getLogger(__name__)
 
 
 class EmailService:
-    """Sends reports via email using SMTP."""
+    """Sends reports via email using SMTP (via aiosmtplib)."""
 
     def __init__(self, settings: Settings) -> None:
-        self._conf = ConnectionConfig(
-            MAIL_USERNAME=settings.smtp_username,
-            MAIL_PASSWORD=settings.smtp_password,
-            MAIL_FROM=settings.smtp_from,
-            MAIL_PORT=settings.smtp_port,
-            MAIL_SERVER=settings.smtp_server,
-            MAIL_STARTTLS=settings.smtp_tls,
-            MAIL_SSL_TLS=settings.smtp_ssl,
-            USE_CREDENTIALS=bool(settings.smtp_username),
-            VALIDATE_CERTS=True,
-        )
+        self._settings = settings
         self._recipients = list(settings.report_recipients)
 
     async def send_report(
@@ -40,16 +32,27 @@ class EmailService:
             logger.warning("No email recipients configured. Skipping email send.")
             return
 
-        message = MessageSchema(
-            subject=subject,
-            recipients=target_recipients,
-            body=html_content,
-            subtype=MessageType.html,
-        )
+        # Create message
+        message = MIMEMultipart()
+        message["From"] = self._settings.smtp_from
+        message["To"] = ", ".join(target_recipients)
+        message["Subject"] = subject
+        message.attach(MIMEText(html_content, "html"))
 
-        fm = FastMail(self._conf)
         try:
-            await fm.send_message(message)
+            async with aiosmtplib.SMTP(
+                hostname=self._settings.smtp_server,
+                port=self._settings.smtp_port,
+                use_tls=self._settings.smtp_tls,
+                start_tls=False if self._settings.smtp_tls else False, # Handled by aiosmtplib logic
+            ) as smtp:
+                if self._settings.smtp_username and self._settings.smtp_password:
+                    await smtp.login(
+                        self._settings.smtp_username, 
+                        self._settings.smtp_password
+                    )
+                await smtp.send_message(message)
+                
             logger.info(f"Report email sent to {len(target_recipients)} recipients.")
         except Exception as exc:
             logger.error(f"Failed to send report email: {exc}")

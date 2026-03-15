@@ -4,4 +4,4 @@ fritzconnection
 pydantic
 python-dotenv
 Jinja2
-fastapi-mail
+aiosmtplib
