@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import List
@@ -23,9 +24,11 @@ class EmailService:
         self,
         subject: str,
         html_content: str,
+        body_text: str = "Anbei finden Sie den aktuellen Verbindungs-Report.",
+        filename: str = "report.html",
         recipients: List[str] | None = None,
     ) -> None:
-        """Sends an HTML email to the configured recipients."""
+        """Sends an email with the HTML report as an attachment."""
         target_recipients = recipients if recipients is not None else self._recipients
         
         if not target_recipients:
@@ -37,14 +40,22 @@ class EmailService:
         message["From"] = self._settings.smtp_from
         message["To"] = ", ".join(target_recipients)
         message["Subject"] = subject
-        message.attach(MIMEText(html_content, "html"))
+        
+        # Attach body text
+        message.attach(MIMEText(body_text, "plain"))
+
+        # Attach HTML report
+        attachment = MIMEText(html_content, "html")
+        attachment.add_header("Content-Disposition", "attachment", filename=filename)
+        message.attach(attachment)
 
         try:
+            use_implicit_tls = self._settings.smtp_port == 465
+            
             async with aiosmtplib.SMTP(
                 hostname=self._settings.smtp_server,
                 port=self._settings.smtp_port,
-                use_tls=self._settings.smtp_tls,
-                start_tls=False if self._settings.smtp_tls else False, # Handled by aiosmtplib logic
+                use_tls=use_implicit_tls,
             ) as smtp:
                 if self._settings.smtp_username and self._settings.smtp_password:
                     await smtp.login(
@@ -53,7 +64,7 @@ class EmailService:
                     )
                 await smtp.send_message(message)
                 
-            logger.info(f"Report email sent to {len(target_recipients)} recipients.")
+            logger.info(f"Report email with attachment sent to {len(target_recipients)} recipients.")
         except Exception as exc:
             logger.error(f"Failed to send report email: {exc}")
             raise

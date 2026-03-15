@@ -1,6 +1,5 @@
 <template>
   <NSpace vertical size="large">
-    <div style="font-size: 10px; color: #ccc">Debug: {{ state.outages.length }} outages, {{ state.logs.length }} logs</div>
     <NCard title="Verfügbarkeit & Stabilitäts-KPIs" :bordered="true">
       <template #header-extra>
         <NFlex align="center">
