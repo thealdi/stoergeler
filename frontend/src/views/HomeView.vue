@@ -8,15 +8,16 @@
         class="calendar-toolbar"
       >
         <NInputGroup size="small" class="calendar-toolbar__group">
-          <NButton size="small" @click="calendarActions.prev">‹</NButton>
           <NDatePicker
-            :key="datePickerType"
-            size="small"
-            :type="datePickerType"
-            :value="datePickerValue"
-            :style="{ width: isMobile ? '120px' : '160px' }"
-            @update:value="handleDatePick"
+          :key="datePickerType"
+          size="small"
+          :type="datePickerType"
+          :value="datePickerValue"
+          :style="{ width: isMobile ? '120px' : '160px' }"
+          @update:value="handleDatePick"
           />
+          <NButton size="small" @click="calendarActions.prev">‹</NButton>
+          <NButton size="small" @click="calendarActions.today">Heute</NButton>
           <NButton size="small" @click="calendarActions.next">›</NButton>
         </NInputGroup>
         <NButtonGroup size="small" class="calendar-toolbar__views">
