@@ -51,6 +51,14 @@ class ReportingService:
         # MTBF (Mean Time Between Failures)
         mtbf = (total_seconds - total_downtime) / len(unplanned) if unplanned else total_seconds
 
+        # Weekly Overview Data
+        weekly_overview = []
+        for day in range(7):
+            current_day = start + timedelta(days=day)
+            day_name = current_day.strftime("%a")
+            day_outages = [o for o in outages if o.start_time.date() == current_day.date()]
+            weekly_overview.append((day_name, day_outages))
+
         return {
             "start": start,
             "end": end,
@@ -65,6 +73,7 @@ class ReportingService:
             "outages": outages,
             "logs": logs,
             "week_number": self._get_week_number(start),
+            "weekly_overview": weekly_overview,
         }
 
     def render_weekly_report(self, data: Dict[str, Any]) -> str:
