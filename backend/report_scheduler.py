@@ -63,7 +63,8 @@ class ReportScheduler:
         html_content = self._reporting_service.render_weekly_report(data)
         
         subject = f"StoerGeler Wochen-Report (KW {data['week_number']})"
-        body_text = self._settings.report_email_body.format(
+        body_template = self._settings.report_email_body.replace("\\n", "\n")
+        body_text = body_template.format(
             week_number=data["week_number"],
             start_date=data["start"].strftime("%d.%m.%Y"),
             end_date=data["end"].strftime("%d.%m.%Y"),
