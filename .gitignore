@@ -61,6 +61,7 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 data/stoergeler.db
+data/stoergeler_backup.db
 
 # Flask stuff:
 instance/
