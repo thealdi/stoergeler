@@ -16,6 +16,7 @@
         <NSpace vertical size="large">
           <HomeView v-if="activeMenu === 'home'" :is-refreshing="isRefreshing" />
           <OutagesView v-else-if="activeMenu === 'outages'" />
+          <ReportingView v-else-if="activeMenu === 'reporting'" />
           <LogsView v-else-if="activeMenu === 'logs'" />
         </NSpace>
       </NLayoutContent>
@@ -37,6 +38,7 @@ import AppHeader from './components/AppHeader.vue';
 import HomeView from './views/HomeView.vue';
 import LogsView from './views/LogsView.vue';
 import OutagesView from './views/OutagesView.vue';
+import ReportingView from './views/ReportingView.vue';
 import { useDashboardData } from './composables/useDashboardData';
 import { themeOverrides } from './theme';
 import { fetchBackendVersion } from './api/client';
@@ -48,6 +50,7 @@ const uiVersion = import.meta.env.VITE_APP_VERSION || 'dev';
 const menuOptions = [
   { label: 'Home', key: 'home' },
   { label: 'Störungen', key: 'outages' },
+  { label: 'Reporting', key: 'reporting' },
   { label: 'Fritz-Logs', key: 'logs' },
 ];
 
