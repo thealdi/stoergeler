@@ -177,7 +177,6 @@ import {
   NStatistic,
   NProgress,
   NSpace,
-  NTag,
   NEmpty,
   NTooltip,
   NIcon,
@@ -232,13 +231,6 @@ const availability = computed(() => {
 });
 
 const availabilityFormatted = computed(() => availability.value.toFixed(3));
-
-const availabilityType = computed(() => {
-  if (availability.value >= 99.9) return 'success';
-  if (availability.value >= 99.0) return 'info';
-  if (availability.value >= 95.0) return 'warning';
-  return 'error';
-});
 
 const longestOutageSeconds = computed(() =>
   unplannedOutages.value.reduce((max, o) => Math.max(max, o.duration_seconds || 0), 0)
