@@ -27,6 +27,7 @@ services:
       REPORT_RECIPIENTS: ${REPORT_RECIPIENTS:-}
       REPORT_EMAIL_BODY: ${REPORT_EMAIL_BODY:-}
       REPORT_SCHEDULE_CHECK_INTERVAL_SECONDS: ${REPORT_SCHEDULE_CHECK_INTERVAL_SECONDS:-3600}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
     volumes:
       - /volume1/docker/stoergeler/data:/app/data
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Any, Dict
 
@@ -9,6 +10,8 @@ from .database import StatusRepository
 from .device_log_sync import DeviceLogSync
 from .fritzbox_client import FritzboxClient
 from .periodic_runner import PeriodicRunner
+
+logger = logging.getLogger(__name__)
 
 
 class ConnectionTracker:
@@ -46,6 +49,8 @@ class ConnectionTracker:
 
         latest = self._status_repository.latest_event()
         if latest is None or latest.status != status_value:
+            prev = latest.status if latest else "unknown"
+            logger.info("Connection status changed: %s → %s", prev, status_value)
             self._status_repository.record_event(
                 status=status_value,
                 timestamp=timestamp,
@@ -67,12 +72,15 @@ class ConnectionTracker:
         }
 
     async def start(self) -> None:
+        logger.info("ConnectionTracker starting")
         await self._status_poller.start()
         loop = asyncio.get_running_loop()
         await loop.run_in_executor(None, self._device_log_sync.run_once)
         await self._device_log_poller.start()
+        logger.info("ConnectionTracker started")
 
     async def stop(self) -> None:
+        logger.info("ConnectionTracker stopping")
         await self._status_poller.stop()
         await self._device_log_poller.stop()
 

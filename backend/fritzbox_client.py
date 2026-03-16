@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import re
 from dataclasses import dataclass
 from datetime import datetime
@@ -7,6 +8,8 @@ from typing import Any, Dict, List, Optional
 
 from fritzconnection import FritzConnection
 from fritzconnection.lib.fritzstatus import FritzStatus
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -65,15 +68,23 @@ class FritzboxClient:
         }
 
     def poll_status(self) -> Dict[str, Any]:
-        client = self._create_status_client()
-        return {
-            "connected": bool(getattr(client, "is_connected", False)),
-            "details": self._collect_details(client),
-        }
+        try:
+            client = self._create_status_client()
+            return {
+                "connected": bool(getattr(client, "is_connected", False)),
+                "details": self._collect_details(client),
+            }
+        except Exception:
+            logger.error("TR-064 connection error during status poll", exc_info=True)
+            raise
 
     def fetch_device_log(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        connection = self._create_connection()
-        result = connection.call_action("DeviceInfo:1", "GetDeviceLog")
+        try:
+            connection = self._create_connection()
+            result = connection.call_action("DeviceInfo:1", "GetDeviceLog")
+        except Exception:
+            logger.error("TR-064 connection error during device log fetch", exc_info=True)
+            raise
         log_blob = result.get("NewDeviceLog", "") if isinstance(result, dict) else ""
         entries: List[Dict[str, Any]] = []
         for line in log_blob.splitlines():
@@ -83,7 +94,8 @@ class FritzboxClient:
             parsed = self._parse_log_line(cleaned)
             entries.append(parsed)
         if limit is not None:
-            return entries[:limit]
+            entries = entries[:limit]
+        logger.debug("Fetched %d device log entries", len(entries))
         return entries
 
     def _parse_log_line(self, line: str) -> Dict[str, Any]:

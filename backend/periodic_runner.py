@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import inspect
+import logging
 from typing import Any, Awaitable, Callable, Optional, Union
+
+logger = logging.getLogger(__name__)
 
 
 class PeriodicRunner:
@@ -27,6 +30,7 @@ class PeriodicRunner:
             return
         self._stop_event.clear()
         self._task = asyncio.create_task(self._run())
+        logger.debug("PeriodicRunner started (interval=%ds)", self._interval)
 
     async def stop(self) -> None:
         if self._task is None:
@@ -34,6 +38,7 @@ class PeriodicRunner:
         self._stop_event.set()
         await self._task
         self._task = None
+        logger.debug("PeriodicRunner stopped")
 
     async def _run(self) -> None:
         while not self._stop_event.is_set():
@@ -44,6 +49,7 @@ class PeriodicRunner:
                     loop = asyncio.get_running_loop()
                     await loop.run_in_executor(None, self._work)
             except Exception as exc:  # noqa: BLE001
+                logger.error("PeriodicRunner task failed: %s", exc, exc_info=True)
                 if self._on_error is not None:
                     self._on_error(exc)
 

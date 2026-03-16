@@ -87,12 +87,18 @@ The backend is organized in a service-oriented architecture:
 - **`backend/outage_config.py`**: Default keywords for planned/unplanned outage detection
 - **`backend/schemas.py`**: Pydantic models for API request/response
 - **`backend/models.py`**: Domain models for database records
+- **`backend/reporting.py`**: `ReportingService` calculates KPIs (availability, MTTR, MTBF) and renders HTML reports via Jinja2 templates
+- **`backend/email_service.py`**: Async SMTP email delivery using `aiosmtplib`, sends reports as HTML attachments
+- **`backend/report_scheduler.py`**: `ReportScheduler` runs periodically (default hourly) and sends the weekly report on Mondays, using `MetadataRepository` to track last-sent week
+- **`backend/templates/weekly_report.html`**: Jinja2 template for the weekly HTML report
 
 **Key Backend Patterns:**
+- Centralized logging configured via `logging.basicConfig()` in `main.py`; all modules use `logging.getLogger(__name__)`
 - Status changes are only recorded when different from latest stored event
 - Device logs are deduplicated using UNIQUE constraint on (log_timestamp, message)
 - Outages table is fully replaced on each sync (simplifies state management)
 - Separate state tracking for IPv4 and IPv6 allows detection of protocol-specific issues
+- `MetadataRepository` stores key-value pairs (e.g., `last_weekly_report_sent_at`) to track scheduler state across restarts
 
 ### Frontend Structure
 
@@ -133,6 +139,7 @@ FRITZBOX_PASSWORD=secret
 POLL_INTERVAL_SECONDS=60
 DEVICE_LOG_POLL_INTERVAL_SECONDS=60
 DATABASE_PATH=data/stoergeler.db
+LOG_LEVEL=INFO  # DEBUG, INFO, WARNING, ERROR
 ```
 
 Optional keyword customization (CSV format):
@@ -142,6 +149,20 @@ OUTAGE_IPV4_DISCONNECT_KEYWORDS="PPPoE-Fehler,Zeitüberschreitung"
 OUTAGE_IPV4_CONNECT_KEYWORDS="PPPoE,DSL antwortet"
 OUTAGE_IPV6_DISCONNECT_KEYWORDS="IPv6-Präfix,Präfix verloren"
 OUTAGE_IPV6_CONNECT_KEYWORDS="IPv6-Präfix wurde erfolgreich bezogen"
+```
+
+Optional SMTP/reporting configuration:
+```bash
+SMTP_SERVER=smtp.example.com
+SMTP_PORT=587
+SMTP_USERNAME=user
+SMTP_PASSWORD=secret
+SMTP_FROM=noreply@stoergeler.local
+SMTP_TLS=True
+SMTP_SSL=False
+REPORT_RECIPIENTS="admin@example.com,ops@example.com"  # CSV list
+REPORT_EMAIL_BODY="Custom body with {week_number}, {start_date}, {end_date} placeholders"
+REPORT_SCHEDULE_CHECK_INTERVAL_SECONDS=3600
 ```
 
 ## Data Flow
@@ -163,7 +184,13 @@ OUTAGE_IPV6_CONNECT_KEYWORDS="IPv6-Präfix wurde erfolgreich bezogen"
    - Classifies as planned/unplanned based on preceding hints
    - Generates "open" outages for unmatched disconnects
 
-4. **Frontend Display**:
+4. **Weekly Email Reports** (report_scheduler.py → reporting.py → email_service.py):
+   - `ReportScheduler` checks hourly if it's Monday and no report has been sent for the current week
+   - Generates KPIs (availability %, MTTR, MTBF, incident counts) for the previous week
+   - Renders HTML report using Jinja2 template, sends as email attachment via `aiosmtplib`
+   - Tracks sent state in `metadata` table to prevent duplicate sends
+
+5. **Frontend Display**:
    - Fetches `/api/outages` and `/api/device-log` on mount and refresh
    - Displays outages in calendar and table views
    - Shows device logs with pagination
@@ -200,10 +227,11 @@ The frontend has mobile-specific behavior:
 
 ## Database Schema
 
-Three tables in SQLite (`data/stoergeler.db`):
+Four tables in SQLite (`data/stoergeler.db`):
 
 1. **status_events**: Connection status changes (online/offline/error)
 2. **device_log_entries**: Raw Fritzbox logs with UNIQUE(log_timestamp, message)
 3. **outages**: Calculated outage intervals (fully replaced on each sync)
+4. **metadata**: Key-value store for scheduler state (e.g., last report sent week)
 
 Foreign keys link outages to start/end log entries for traceability.
