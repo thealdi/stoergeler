@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - "frontend/**"
-      - "config/release-frontend.cjs"
       - ".github/workflows/release-frontend.yml"
 
 permissions:

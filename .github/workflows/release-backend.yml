@@ -9,7 +9,6 @@ on:
       - 'backend/**'
       - 'Dockerfile'
       - 'requirements.txt'
-      - 'config/release-backend.cjs'
       - '.github/workflows/release-backend.yml'
 
 permissions:

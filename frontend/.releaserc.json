@@ -1,0 +1,29 @@
+{
+  "branches": ["main"],
+  "tagFormat": "frontend-v${version}",
+  "plugins": [
+    [
+      "@semantic-release/commit-analyzer",
+      {
+        "preset": "angular",
+        "releaseRules": [
+          { "breaking": true, "scope": "frontend", "release": "major" },
+          { "breaking": true, "release": false },
+          { "type": "feat", "scope": "frontend", "release": "minor" },
+          { "type": "fix", "scope": "frontend", "release": "patch" },
+          { "type": "perf", "scope": "frontend", "release": "patch" },
+          { "type": "feat", "release": false },
+          { "type": "fix", "release": false },
+          { "type": "perf", "release": false }
+        ]
+      }
+    ],
+    [
+      "@semantic-release/release-notes-generator",
+      {
+        "preset": "angular"
+      }
+    ],
+    "@semantic-release/github"
+  ]
+}
