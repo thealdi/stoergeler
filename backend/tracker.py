@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import asyncio
 import json
 import logging
 from datetime import datetime, timezone
@@ -74,8 +73,6 @@ class ConnectionTracker:
     async def start(self) -> None:
         logger.info("ConnectionTracker starting")
         await self._status_poller.start()
-        loop = asyncio.get_running_loop()
-        await loop.run_in_executor(None, self._device_log_sync.run_once)
         await self._device_log_poller.start()
         logger.info("ConnectionTracker started")
 
