@@ -161,14 +161,7 @@ def device_log(
 
 
 @app.get("/outages", response_model=OutageListResponse)
-def outage_windows(
-    limit: Optional[int] = Query(
-        default=300,
-        ge=1,
-        le=1000,
-        description="Optional: Anzahl der Logzeilen, die ausgewertet werden sollen",
-    ),
-) -> OutageListResponse:
+def outage_windows() -> OutageListResponse:
     try:
         stored_outages = outage_repository.list_outages()
     except Exception as exc:  # noqa: BLE001

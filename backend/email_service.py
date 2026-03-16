@@ -50,17 +50,17 @@ class EmailService:
         message.attach(attachment)
 
         try:
-            use_implicit_tls = self._settings.smtp_port == 465
-            
             async with aiosmtplib.SMTP(
                 hostname=self._settings.smtp_server,
                 port=self._settings.smtp_port,
-                use_tls=use_implicit_tls,
+                use_tls=self._settings.smtp_ssl,
             ) as smtp:
+                if not self._settings.smtp_ssl and self._settings.smtp_tls:
+                    await smtp.starttls()
                 if self._settings.smtp_username and self._settings.smtp_password:
                     await smtp.login(
-                        self._settings.smtp_username, 
-                        self._settings.smtp_password
+                        self._settings.smtp_username,
+                        self._settings.smtp_password,
                     )
                 await smtp.send_message(message)
                 

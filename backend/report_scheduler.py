@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timezone
 from typing import Any, Dict
@@ -48,7 +49,11 @@ class ReportScheduler:
         if now.weekday() != 0:  # 0 is Monday
             return
 
-        last_sent_iso = self._metadata_repo.get("last_weekly_report_sent_at")
+        loop = asyncio.get_running_loop()
+
+        last_sent_iso = await loop.run_in_executor(
+            None, self._metadata_repo.get, "last_weekly_report_sent_at"
+        )
         current_week_key = f"{now.year}-W{now.isocalendar()[1]}"
         logger.debug("Report guard check: last_sent=%s, current_week=%s", last_sent_iso, current_week_key)
 
@@ -57,12 +62,16 @@ class ReportScheduler:
             return
 
         logger.info("Preparing weekly report for %s ...", current_week_key)
-        
+
         # Generate report for LAST week
         start, end = get_last_week_range()
-        data = self._reporting_service.get_report_data(start, end)
-        html_content = self._reporting_service.render_weekly_report(data)
-        
+        data = await loop.run_in_executor(
+            None, self._reporting_service.get_report_data, start, end
+        )
+        html_content = await loop.run_in_executor(
+            None, self._reporting_service.render_weekly_report, data
+        )
+
         subject = f"StoerGeler Wochen-Report (KW {data['week_number']})"
         body_template = self._settings.report_email_body.replace("\\n", "\n")
         body_text = body_template.format(
@@ -74,13 +83,15 @@ class ReportScheduler:
         filename = f"verbindungs_report_kw{data['week_number']}.html"
 
         await self._email_service.send_report(
-            subject=subject, 
+            subject=subject,
             html_content=html_content,
             body_text=body_text,
             filename=filename
         )
-        
-        self._metadata_repo.set("last_weekly_report_sent_at", current_week_key)
+
+        await loop.run_in_executor(
+            None, self._metadata_repo.set, "last_weekly_report_sent_at", current_week_key
+        )
         logger.info("Weekly report for %s sent and guard updated.", current_week_key)
 
     def _handle_error(self, exc: Exception) -> None:
