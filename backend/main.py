@@ -1,14 +1,26 @@
 from __future__ import annotations
 
+import logging
 from typing import Dict, Optional
 import os
+
+from .config import settings
+
+# --- Logging setup (before any other module creates loggers) ---
+logging.basicConfig(
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    level=getattr(logging, settings.log_level.upper(), logging.INFO),
+)
+# Quiet noisy third-party loggers
+for _name in ("httpcore", "httpx", "fritzconnection", "urllib3"):
+    logging.getLogger(_name).setLevel(logging.WARNING)
+
+logger = logging.getLogger(__name__)
 
 from fastapi import FastAPI, HTTPException, Query
 from starlette.status import HTTP_201_CREATED
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-
-from .config import settings
 from .database import (
     DatabaseContext,
     DeviceLogRepository,
@@ -96,12 +108,15 @@ report_scheduler = ReportScheduler(
 
 @app.on_event("startup")
 async def _startup() -> None:
+    logger.info("StoerGeler backend starting up")
     await tracker.start()
     await report_scheduler.start()
+    logger.info("StoerGeler backend started")
 
 
 @app.on_event("shutdown")
 async def _shutdown() -> None:
+    logger.info("StoerGeler backend shutting down")
     await tracker.stop()
     await report_scheduler.stop()
 

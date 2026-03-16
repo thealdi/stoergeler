@@ -64,7 +64,10 @@ class EmailService:
                     )
                 await smtp.send_message(message)
                 
-            logger.info(f"Report email with attachment sent to {len(target_recipients)} recipients.")
+            logger.info(
+                "Report email sent to %d recipients, subject=%r, body_preview=%r",
+                len(target_recipients), subject, body_text[:80],
+            )
         except Exception as exc:
             logger.error(f"Failed to send report email: {exc}")
             raise

@@ -50,12 +50,13 @@ class ReportScheduler:
 
         last_sent_iso = self._metadata_repo.get("last_weekly_report_sent_at")
         current_week_key = f"{now.year}-W{now.isocalendar()[1]}"
-        
+        logger.debug("Report guard check: last_sent=%s, current_week=%s", last_sent_iso, current_week_key)
+
         if last_sent_iso == current_week_key:
-            logger.debug(f"Weekly report for {current_week_key} already sent.")
+            logger.debug("Weekly report for %s already sent, skipping.", current_week_key)
             return
 
-        logger.info(f"It's Monday! Preparing weekly report for {current_week_key}...")
+        logger.info("Preparing weekly report for %s ...", current_week_key)
         
         # Generate report for LAST week
         start, end = get_last_week_range()
@@ -69,8 +70,9 @@ class ReportScheduler:
             start_date=data["start"].strftime("%d.%m.%Y"),
             end_date=data["end"].strftime("%d.%m.%Y"),
         )
+        logger.debug("Email body text: %r", body_text[:200])
         filename = f"verbindungs_report_kw{data['week_number']}.html"
-        
+
         await self._email_service.send_report(
             subject=subject, 
             html_content=html_content,
@@ -79,7 +81,7 @@ class ReportScheduler:
         )
         
         self._metadata_repo.set("last_weekly_report_sent_at", current_week_key)
-        logger.info(f"Weekly report for {current_week_key} sent successfully.")
+        logger.info("Weekly report for %s sent and guard updated.", current_week_key)
 
     def _handle_error(self, exc: Exception) -> None:
-        logger.error(f"Error in ReportScheduler: {exc}")
+        logger.error("Error in ReportScheduler: %s", exc, exc_info=True)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import math
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
@@ -8,6 +9,8 @@ from jinja2 import Environment, FileSystemLoader, select_autoescape
 
 from .database import DeviceLogRepository, OutageRepository
 from .models import DeviceLogEntryRecord, OutageRecord
+
+logger = logging.getLogger(__name__)
 
 
 class ReportingService:
@@ -78,6 +81,7 @@ class ReportingService:
 
     def render_weekly_report(self, data: Dict[str, Any]) -> str:
         """Renders the HTML report using Jinja2."""
+        logger.info("Generated weekly report for KW %s", data.get("week_number"))
         template = self._jinja_env.get_template("weekly_report.html")
         return template.render(**data)
 

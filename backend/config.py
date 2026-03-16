@@ -48,6 +48,9 @@ class Settings:
         "OUTAGE_IPV6_CONNECT_KEYWORDS", DEFAULT_OUTAGE_KEYWORDS.ipv6_connect_keywords
     )
 
+    # Logging
+    log_level: str = os.getenv("LOG_LEVEL", "INFO")
+
     # SMTP Settings
     smtp_server: str = os.getenv("SMTP_SERVER", "")
     smtp_port: int = int(os.getenv("SMTP_PORT", "587"))

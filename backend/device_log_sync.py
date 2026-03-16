@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+import logging
 from typing import Any, Dict, Iterable
 
 from .database import DeviceLogRepository, OutageRepository
 from .fritzbox_client import FritzboxClient
 from .outage_calculator import OutageCalculator
+
+logger = logging.getLogger(__name__)
 
 
 class DeviceLogSync:
@@ -23,8 +26,13 @@ class DeviceLogSync:
         self._outage_calculator = outage_calculator
 
     def run_once(self) -> None:
-        entries: Iterable[Dict[str, Any]] = self._fritzbox_client.fetch_device_log()
-        self._device_log_repository.ingest_entries(entries)
+        entries = list(self._fritzbox_client.fetch_device_log())
+        new_count = self._device_log_repository.ingest_entries(entries)
         stored_entries = self._device_log_repository.list_entries()
         outages = self._outage_calculator.calculate(stored_entries)
         self._outage_repository.replace_outages(outages)
+        logger.info(
+            "Device log sync: %d new entries ingested, %d outages calculated",
+            new_count,
+            len(outages),
+        )

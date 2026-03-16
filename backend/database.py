@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime
@@ -7,6 +8,8 @@ from pathlib import Path
 from typing import Any, Generator, Iterable, List, Optional, Sequence
 
 from .models import DeviceLogEntryRecord, OutageRecord, StatusEvent
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseContext:
@@ -26,6 +29,7 @@ class DatabaseContext:
             conn.close()
 
     def init_schema(self) -> None:
+        logger.info("Initializing database schema at %s", self._database_path)
         with self.connect() as conn:
             conn.execute(
                 """
