@@ -92,7 +92,17 @@ class TestDeviceLogEndpoint:
         mock_deps.device_log_repository.list_entries.return_value = []
         resp = client.get("/device-log?limit=10")
         assert resp.status_code == 200
-        mock_deps.device_log_repository.list_entries.assert_called_once_with(limit=10, ascending=False)
+        mock_deps.device_log_repository.list_entries.assert_called_once_with(
+            limit=10, ascending=False, start=None, end=None,
+        )
+
+    def test_passes_start_end_params(self, client, mock_deps):
+        mock_deps.device_log_repository.list_entries.return_value = []
+        resp = client.get("/device-log?start=2024-01-15T00:00:00Z&end=2024-01-15T23:59:59Z")
+        assert resp.status_code == 200
+        call_kwargs = mock_deps.device_log_repository.list_entries.call_args
+        assert call_kwargs.kwargs["start"] is not None
+        assert call_kwargs.kwargs["end"] is not None
 
     def test_rejects_invalid_limit(self, client):
         resp = client.get("/device-log?limit=0")
