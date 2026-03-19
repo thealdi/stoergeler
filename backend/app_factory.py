@@ -4,6 +4,7 @@ import logging
 import os
 import sqlite3
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, Dict, Optional
 
 from fastapi import FastAPI, HTTPException, Query
@@ -171,10 +172,23 @@ def create_app(deps: Optional[Dependencies] = None) -> FastAPI:
             ge=1,
             le=500,
             description="Optional: Anzahl der Logzeilen beschränken (1-500)",
-        )
+        ),
+        start: Optional[datetime] = Query(
+            default=None,
+            description="Nur Einträge ab diesem Zeitpunkt (ISO-8601)",
+        ),
+        end: Optional[datetime] = Query(
+            default=None,
+            description="Nur Einträge bis zu diesem Zeitpunkt (ISO-8601)",
+        ),
     ) -> DeviceLogResponse:
+        # DB stores naive (no-tz) timestamps — strip tzinfo to match
+        naive_start = start.replace(tzinfo=None) if start else None
+        naive_end = end.replace(tzinfo=None) if end else None
         try:
-            records = deps.device_log_repository.list_entries(limit=limit, ascending=False)
+            records = deps.device_log_repository.list_entries(
+                limit=limit, ascending=False, start=naive_start, end=naive_end,
+            )
         except sqlite3.Error as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
         return DeviceLogResponse(

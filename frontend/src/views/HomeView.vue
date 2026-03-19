@@ -77,6 +77,7 @@ import {
   NFlex,
   NInputGroup,
 } from 'naive-ui';
+import { fetchDeviceLog } from '../api/client';
 import type { DeviceLogEntry } from '../api/types';
 import CalendarView from '../components/CalendarView.vue';
 import DeviceLogTable from '../components/DeviceLogTable.vue';
@@ -92,6 +93,8 @@ const { isRefreshing } = defineProps<{
 const { state, setSelectedEvent } = useStoergelerState();
 const selectedRange = ref<{ start: Date; end: Date; label: string } | null>(null);
 const drawerOpen = ref(false);
+const drawerLogs = ref<DeviceLogEntry[]>([]);
+const drawerLoading = ref(false);
 const calendarRef = ref<InstanceType<typeof CalendarView> | null>(null);
 const drawerPaginator = usePagination<DeviceLogEntry>([], 20);
 const isMobile = useIsMobile();
@@ -103,7 +106,7 @@ const {
   calendarActions,
 } = useCalendarHeader(calendarRef);
 
-function handleSelectOutage(payload: { eventId: string; start: Date; end: Date; label: string }) {
+async function handleSelectOutage(payload: { eventId: string; start: Date; end: Date; label: string }) {
   setSelectedEvent(payload.eventId);
   selectedRange.value = {
     start: payload.start,
@@ -111,6 +114,15 @@ function handleSelectOutage(payload: { eventId: string; start: Date; end: Date; 
     label: payload.label,
   };
   drawerOpen.value = true;
+  drawerLoading.value = true;
+  drawerLogs.value = [];
+  try {
+    drawerLogs.value = await fetchDeviceLog({ start: payload.start, end: payload.end });
+  } catch {
+    drawerLogs.value = [];
+  } finally {
+    drawerLoading.value = false;
+  }
 }
 
 function handleDrawerUpdate(show: boolean) {
@@ -118,27 +130,9 @@ function handleDrawerUpdate(show: boolean) {
   if (!show) {
     selectedRange.value = null;
     setSelectedEvent(null);
+    drawerLogs.value = [];
   }
 }
-
-function filterLogsByRange(entries: DeviceLogEntry[], start: Date, end: Date) {
-  const startMs = start.getTime();
-  const endMs = end.getTime();
-  return entries.filter((entry) => {
-    if (!entry.timestamp) {
-      return false;
-    }
-    const entryMs = new Date(entry.timestamp).getTime();
-    return entryMs >= startMs && entryMs <= endMs;
-  });
-}
-
-const filteredLogs = computed(() => {
-  if (!selectedRange.value) {
-    return state.logs;
-  }
-  return filterLogsByRange(state.logs, selectedRange.value.start, selectedRange.value.end);
-});
 
 const drawerPageItems = computed(() => drawerPaginator.pageItems.value);
 const drawerPage = computed(() => drawerPaginator.currentPage.value + 1);
@@ -151,7 +145,7 @@ function setDrawerPage(page: number) {
 }
 
 watch(
-  filteredLogs,
+  drawerLogs,
   (logs) => {
     drawerPaginator.setItems(logs);
   },

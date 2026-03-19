@@ -35,8 +35,24 @@ export async function fetchOutages(): Promise<OutageWindow[]> {
   return data.outages ?? [];
 }
 
-export async function fetchDeviceLog(limit = 500): Promise<DeviceLogEntry[]> {
-  const data = await request<DeviceLogResponse>(`/device-log?limit=${limit}`);
+/** Format a Date as a naive (no timezone) ISO string matching the DB storage format. */
+function toNaiveISO(date: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return (
+    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
+    `T${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+  );
+}
+
+export async function fetchDeviceLog(
+  options: { limit?: number; start?: Date; end?: Date } = {},
+): Promise<DeviceLogEntry[]> {
+  const params = new URLSearchParams();
+  if (options.limit != null) params.set('limit', String(options.limit));
+  if (options.start) params.set('start', toNaiveISO(options.start));
+  if (options.end) params.set('end', toNaiveISO(options.end));
+  const qs = params.toString();
+  const data = await request<DeviceLogResponse>(`/device-log${qs ? `?${qs}` : ''}`);
   return data.entries ?? [];
 }
 
