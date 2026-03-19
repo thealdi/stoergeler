@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import math
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from jinja2 import Environment, FileSystemLoader, select_autoescape
@@ -20,12 +21,14 @@ class ReportingService:
         self,
         outage_repository: OutageRepository,
         device_log_repository: DeviceLogRepository,
-        template_dir: str = "backend/templates",
+        template_dir: str | Path | None = None,
     ) -> None:
         self._outage_repo = outage_repository
         self._device_log_repo = device_log_repository
+        if template_dir is None:
+            template_dir = Path(__file__).resolve().parent / "templates"
         self._jinja_env = Environment(
-            loader=FileSystemLoader(template_dir),
+            loader=FileSystemLoader(str(template_dir)),
             autoescape=select_autoescape(["html", "xml"]),
         )
         # Register custom filters for formatting

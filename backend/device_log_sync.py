@@ -28,6 +28,9 @@ class DeviceLogSync:
     def run_once(self) -> None:
         entries = list(self._fritzbox_client.fetch_device_log())
         new_count = self._device_log_repository.ingest_entries(entries)
+        if new_count == 0:
+            logger.debug("Device log sync: no new entries, skipping recalculation")
+            return
         stored_entries = self._device_log_repository.list_entries()
         outages = self._outage_calculator.calculate(stored_entries)
         self._outage_repository.replace_outages(outages)
