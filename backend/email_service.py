@@ -54,6 +54,7 @@ class EmailService:
                 hostname=self._settings.smtp_server,
                 port=self._settings.smtp_port,
                 use_tls=self._settings.smtp_ssl,
+                timeout=30,
             ) as smtp:
                 if not self._settings.smtp_ssl and self._settings.smtp_tls:
                     await smtp.starttls()

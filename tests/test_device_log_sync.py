@@ -60,17 +60,16 @@ class TestDeviceLogSync:
 
         log_repo.ingest_entries.assert_called_once_with(raw_entries)
 
-    def test_empty_fritzbox_still_recalculates(self, mocks, sync):
+    def test_no_new_entries_skips_recalculation(self, mocks, sync):
         fritzbox, log_repo, outage_repo, calculator = mocks
         fritzbox.fetch_device_log.return_value = []
         log_repo.ingest_entries.return_value = 0
-        log_repo.list_entries.return_value = []
-        calculator.calculate.return_value = []
 
         sync.run_once()
 
-        calculator.calculate.assert_called_once_with([])
-        outage_repo.replace_outages.assert_called_once_with([])
+        log_repo.list_entries.assert_not_called()
+        calculator.calculate.assert_not_called()
+        outage_repo.replace_outages.assert_not_called()
 
     def test_fritzbox_error_propagates(self, mocks, sync):
         fritzbox, log_repo, outage_repo, calculator = mocks

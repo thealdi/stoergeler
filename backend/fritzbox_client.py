@@ -2,14 +2,37 @@ from __future__ import annotations
 
 import logging
 import re
+import time
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, TypeVar
 
 from fritzconnection import FritzConnection
 from fritzconnection.lib.fritzstatus import FritzStatus
 
 logger = logging.getLogger(__name__)
+
+T = TypeVar("T")
+
+
+def _retry(fn: Callable[[], T], attempts: int = 3, backoff: float = 2.0) -> T:
+    """Call *fn* up to *attempts* times with exponential backoff on failure."""
+    for attempt in range(1, attempts + 1):
+        try:
+            return fn()
+        except Exception:
+            if attempt == attempts:
+                raise
+            delay = backoff ** attempt
+            logger.warning(
+                "Attempt %d/%d failed, retrying in %.0fs …",
+                attempt,
+                attempts,
+                delay,
+                exc_info=True,
+            )
+            time.sleep(delay)
+    raise RuntimeError("unreachable")  # pragma: no cover
 
 
 @dataclass(frozen=True)
@@ -68,20 +91,26 @@ class FritzboxClient:
         }
 
     def poll_status(self) -> Dict[str, Any]:
-        try:
+        def _do_poll() -> Dict[str, Any]:
             client = self._create_status_client()
             return {
                 "connected": bool(getattr(client, "is_connected", False)),
                 "details": self._collect_details(client),
             }
+
+        try:
+            return _retry(_do_poll)
         except Exception:
             logger.error("TR-064 connection error during status poll", exc_info=True)
             raise
 
     def fetch_device_log(self, limit: Optional[int] = None) -> List[Dict[str, Any]]:
-        try:
+        def _do_fetch() -> dict:
             connection = self._create_connection()
-            result = connection.call_action("DeviceInfo:1", "GetDeviceLog")
+            return connection.call_action("DeviceInfo:1", "GetDeviceLog")
+
+        try:
+            result = _retry(_do_fetch)
         except Exception:
             logger.error("TR-064 connection error during device log fetch", exc_info=True)
             raise
