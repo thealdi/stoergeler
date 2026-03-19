@@ -1,8 +1,11 @@
 from __future__ import annotations
 
 import logging
+import sqlite3
 from typing import Dict, Optional
 import os
+
+from fritzconnection.core.exceptions import FritzConnectionException
 
 from .config import settings
 
@@ -130,7 +133,7 @@ def health() -> Dict[str, str]:
 def current_status() -> StatusResponse:
     try:
         result = tracker.poll_now()
-    except Exception as exc:  # noqa: BLE001
+    except (FritzConnectionException, ConnectionError, OSError, sqlite3.Error) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return StatusResponse(**result)
 
@@ -146,7 +149,7 @@ def device_log(
 ) -> DeviceLogResponse:
     try:
         records = device_log_repository.list_entries(limit=limit, ascending=False)
-    except Exception as exc:  # noqa: BLE001
+    except sqlite3.Error as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return DeviceLogResponse(
         entries=[
@@ -164,7 +167,7 @@ def device_log(
 def outage_windows() -> OutageListResponse:
     try:
         stored_outages = outage_repository.list_outages()
-    except Exception as exc:  # noqa: BLE001
+    except sqlite3.Error as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     windows = [
@@ -187,7 +190,7 @@ def create_outage(body: OutageCreate) -> OutageCreateResponse:
             end_time=body.end,
             status=body.status,
         )
-    except Exception as exc:  # noqa: BLE001
+    except sqlite3.Error as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     duration = None
@@ -209,7 +212,7 @@ def create_outage(body: OutageCreate) -> OutageCreateResponse:
 def connection_check() -> ConnectivityStatus:
     try:
         status = tracker.check_connection()
-    except Exception as exc:  # noqa: BLE001
+    except (FritzConnectionException, ConnectionError, OSError) as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     return ConnectivityStatus(**status)
 
@@ -224,7 +227,7 @@ def get_weekly_report(
         data = reporting_service.get_report_data(start, end)
         html = reporting_service.render_weekly_report(data)
         return HTMLResponse(content=html)
-    except Exception as exc:  # noqa: BLE001
+    except (sqlite3.Error, OSError) as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
@@ -238,7 +241,7 @@ async def send_test_report_email() -> Dict[str, str]:
         subject = f"StoerGeler Test-Report (KW {data['week_number']})"
         await email_service.send_report(subject, html)
         return {"status": "sent"}
-    except Exception as exc:  # noqa: BLE001
+    except (sqlite3.Error, OSError) as exc:
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
