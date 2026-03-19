@@ -80,6 +80,17 @@ class DatabaseContext:
                 )
                 """
             )
+            # Indexes for common ORDER BY / WHERE columns
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_device_log_entries_timestamp ON device_log_entries(log_timestamp)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_outages_start_time ON outages(start_time)"
+            )
+            conn.execute(
+                "CREATE INDEX IF NOT EXISTS idx_status_events_timestamp ON status_events(timestamp)"
+            )
+
             # Migration: add source column to existing databases
             try:
                 conn.execute("ALTER TABLE outages ADD COLUMN source TEXT NOT NULL DEFAULT 'calculated'")
