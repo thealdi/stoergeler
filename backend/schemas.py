@@ -61,10 +61,10 @@ class OutageCreateResponse(BaseModel):
 
 class ConnectivityStatus(BaseModel):
     connected: bool = Field(description="Gibt an, ob laut TR-064 derzeit eine Verbindung besteht")
-    external_ip: Optional[str] = Field(default=None, description="Vom Router gemeldete externe IP")
-    wan_access_type: Optional[str] = Field(default=None, description="Verbindungstyp laut FritzStatus")
-    wan_link_status: Optional[str] = Field(default=None, description="WAN-Link-Status laut Fritzbox")
+    external_ip: Optional[str] = Field(default=None, description="Vom Router gemeldete externe IPv4")
+    external_ipv6: Optional[str] = Field(default=None, description="Vom Router gemeldete externe IPv6")
+    connection_service: Optional[str] = Field(default=None, description="Verbindungstyp (z.B. WANPPPConnection)")
+    is_linked: Optional[bool] = Field(default=None, description="Physische Verbindung zum Provider aktiv")
     max_bit_rate: Optional[str] = Field(default=None, description="Maximaler Up-/Downstream laut Fritzbox")
-    uptime: Optional[Union[int, str]] = Field(
-        default=None, description="Online-Dauer laut Fritzbox (Sekunden oder formatiert)"
-    )
+    transmission_rate: Optional[str] = Field(default=None, description="Aktuelle Übertragungsrate Up-/Downstream in Bytes/s")
+    uptime: Optional[str] = Field(default=None, description="Online-Dauer formatiert (HH:MM:SS)")

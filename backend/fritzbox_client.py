@@ -78,16 +78,14 @@ class FritzboxClient:
                 return value
             return str(value)
 
-        wan_access_type = _safe_attr("connection") or _safe_attr("connection_type")
-        wan_link_status = _safe_attr("wan_link_status")
-        uptime = _safe_attr("uptime") or _safe_attr("connection_uptime")
-
         return {
             "external_ip": _safe_value(_safe_attr("external_ip")),
-            "wan_access_type": _safe_value(wan_access_type),
-            "wan_link_status": _safe_value(wan_link_status),
+            "external_ipv6": _safe_value(_safe_attr("external_ipv6")),
+            "connection_service": _safe_value(_safe_attr("connection_service")),
+            "is_linked": _safe_value(_safe_attr("is_linked")),
             "max_bit_rate": _safe_value(_safe_attr("max_bit_rate")),
-            "uptime": _safe_value(uptime),
+            "transmission_rate": _safe_value(_safe_attr("transmission_rate")),
+            "uptime": _safe_value(_safe_attr("str_uptime")),
         }
 
     def poll_status(self) -> Dict[str, Any]:

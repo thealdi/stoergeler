@@ -14,10 +14,12 @@ export interface DeviceLogEntry {
 export interface ConnectivityStatus {
   connected: boolean;
   external_ip?: string | null;
-  wan_access_type?: string | null;
-  wan_link_status?: string | null;
+  external_ipv6?: string | null;
+  connection_service?: string | null;
+  is_linked?: boolean | null;
   max_bit_rate?: string | null;
-  uptime?: number | string | null;
+  transmission_rate?: string | null;
+  uptime?: string | null;
 }
 
 export interface OutageListResponse {

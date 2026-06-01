@@ -16,7 +16,7 @@ class PeriodicRunner:
     def __init__(
         self,
         interval_seconds: int,
-        work: Union[Callable[[], None], Callable[[], Awaitable[None]]],
+        work: Union[Callable[[], Any], Callable[[], Awaitable[Any]]],
         on_error: Optional[Callable[[Exception], None]] = None,
     ) -> None:
         self._interval = interval_seconds

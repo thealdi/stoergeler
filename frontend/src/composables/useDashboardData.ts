@@ -35,8 +35,8 @@ export function useDashboardData() {
   function buildConnectionInfoSummary(connection: ConnectivityStatus) {
     const infoBits: string[] = [];
     if (connection.external_ip) infoBits.push(`IP ${connection.external_ip}`);
-    if (connection.wan_access_type) infoBits.push(connection.wan_access_type);
-    if (connection.wan_link_status) infoBits.push(`Link ${connection.wan_link_status}`);
+    if (connection.connection_service) infoBits.push(connection.connection_service);
+    if (connection.is_linked != null) infoBits.push(`Link ${connection.is_linked ? 'Up' : 'Down'}`);
     return infoBits.length ? ` (${infoBits.join(' | ')})` : '';
   }
 
