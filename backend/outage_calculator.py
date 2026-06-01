@@ -25,7 +25,24 @@ class OutageCalculator:
     def __init__(self, cfg: OutageKeywords = DEFAULT_OUTAGE_KEYWORDS) -> None:
         self._cfg = cfg
 
+    # Fritzbox logs at 1-second resolution and can emit disconnect and connect
+    # for the same protocol in the same second (observed during Zwangstrennung).
+    # We must process planned_hint before disconnect, and disconnect before
+    # connect, otherwise a connect ahead of its disconnect is dropped and the
+    # disconnect later matches the next day's connect, producing a ~24h outage.
+    _ACTION_SORT_ORDER = {"planned_hint": 0, "disconnect": 1, "connect": 2}
+
     def calculate(self, entries: Sequence[DeviceLogEntryRecord]) -> List[Dict[str, Any]]:
+        categorized = [
+            (entry, *categorize_log_entry(entry, self._cfg)) for entry in entries
+        ]
+        categorized.sort(
+            key=lambda item: (
+                item[0].timestamp,
+                self._ACTION_SORT_ORDER.get(item[2], 3),
+            )
+        )
+
         outages: List[Dict[str, Any]] = []
 
         state: Dict[str, Dict[str, Any]] = {
@@ -34,9 +51,7 @@ class OutageCalculator:
         }
         pending_planned = {"ipv4": False, "ipv6": False}
 
-        for entry in entries:
-            protocol, action = categorize_log_entry(entry, self._cfg)
-
+        for entry, protocol, action in categorized:
             if action == "planned_hint":
                 if protocol in ("ipv4", "both"):
                     pending_planned["ipv4"] = True

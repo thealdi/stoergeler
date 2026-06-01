@@ -158,6 +158,29 @@ class TestOutageCalculator:
         ]
         assert calculator.calculate(entries) == []
 
+    def test_same_second_connect_before_disconnect_still_pairs(self, calculator):
+        """Fritzbox logs at 1s resolution; during Zwangstrennung it emits IPv4
+        disconnect and reconnect in the same second, and the repository may
+        return the connect first. The calculator must reorder so the pair
+        matches into a short outage instead of leaving the disconnect open
+        to be matched against the next day's reconnect.
+        """
+        next_day = DT + timedelta(days=1)
+        entries = [
+            make_log_entry(1, DT - timedelta(seconds=4), "Zwangstrennung durch Provider"),
+            # Same-second pair, connect listed BEFORE disconnect (the bug trigger):
+            make_log_entry(2, DT, "Internetverbindung wurde erfolgreich hergestellt"),
+            make_log_entry(3, DT, "Internetverbindung wurde getrennt"),
+            # Next day's Zwangstrennung — must NOT close yesterday's disconnect:
+            make_log_entry(4, next_day - timedelta(seconds=4), "Zwangstrennung durch Provider"),
+            make_log_entry(5, next_day, "Internetverbindung wurde erfolgreich hergestellt"),
+            make_log_entry(6, next_day, "Internetverbindung wurde getrennt"),
+        ]
+        result = calculator.calculate(entries)
+        assert len(result) == 2
+        assert all(o["status"] == "planned" for o in result)
+        assert all(o["duration_seconds"] == 1 for o in result)
+
     def test_mixed_planned_ipv4_unplanned_ipv6(self, calculator):
         """Planned IPv4 and unplanned IPv6 in the same sequence."""
         entries = [
