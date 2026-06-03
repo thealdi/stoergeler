@@ -100,7 +100,9 @@ class TestOutageCalculator:
         assert len(result) == 1
         assert result[0]["duration_seconds"] == 1
 
-    def test_ipv4_and_ipv6_independent(self, calculator):
+    def test_overlapping_ipv4_and_ipv6_merge_into_one(self, calculator):
+        """A single disconnect drops both protocols; the overlapping IPv4 and
+        IPv6 outages are merged into one window spanning their union."""
         entries = [
             make_log_entry(1, DT, "Internetverbindung wurde getrennt"),
             make_log_entry(2, DT, "Internetverbindung IPv6 wurde getrennt"),
@@ -108,9 +110,12 @@ class TestOutageCalculator:
             make_log_entry(4, DT + timedelta(minutes=5), "Internetverbindung IPv6 wurde erfolgreich hergestellt"),
         ]
         result = calculator.calculate(entries)
-        assert len(result) == 2
-        durations = sorted(o["duration_seconds"] for o in result)
-        assert durations == [180, 300]
+        assert len(result) == 1
+        assert result[0]["start_time"] == DT
+        assert result[0]["end_time"] == DT + timedelta(minutes=5)
+        assert result[0]["duration_seconds"] == 300
+        assert result[0]["start_log_entry_id"] == 1
+        assert result[0]["end_log_entry_id"] == 4
 
     def test_multiple_sequential_cycles(self, calculator):
         entries = [
@@ -125,7 +130,8 @@ class TestOutageCalculator:
         assert result[1]["duration_seconds"] == 120
 
     def test_planned_hint_sets_both_protocols(self, calculator):
-        """Planned hint with 'both' protocol sets pending for IPv4 and IPv6."""
+        """Planned hint with 'both' protocol marks IPv4 and IPv6 as planned;
+        the overlapping protocol outages merge into one planned window."""
         entries = [
             make_log_entry(1, DT, "Zwangstrennung durch Provider"),
             make_log_entry(2, DT + timedelta(seconds=1), "Internetverbindung wurde getrennt"),
@@ -134,8 +140,10 @@ class TestOutageCalculator:
             make_log_entry(5, DT + timedelta(minutes=2, seconds=1), "Internetverbindung IPv6 wurde erfolgreich hergestellt"),
         ]
         result = calculator.calculate(entries)
-        assert len(result) == 2
-        assert all(o["status"] == "planned" for o in result)
+        assert len(result) == 1
+        assert result[0]["status"] == "planned"
+        assert result[0]["start_time"] == DT + timedelta(seconds=1)
+        assert result[0]["end_time"] == DT + timedelta(minutes=2, seconds=1)
 
     def test_planned_flag_cleared_after_connect(self, calculator):
         """After a planned outage closes, the next disconnect should be unplanned."""
@@ -150,6 +158,21 @@ class TestOutageCalculator:
         assert len(result) == 2
         assert result[0]["status"] == "planned"
         assert result[1]["status"] == "closed"
+
+    def test_open_outage_absorbs_overlapping_event(self, calculator):
+        """An IPv4 disconnect that never reconnects stays open and absorbs a
+        later IPv6 disconnect that occurs while it is still down."""
+        entries = [
+            make_log_entry(1, DT, "Internetverbindung wurde getrennt"),
+            make_log_entry(2, DT + timedelta(minutes=1), "Internetverbindung IPv6 wurde getrennt"),
+            make_log_entry(3, DT + timedelta(minutes=2), "Internetverbindung IPv6 wurde erfolgreich hergestellt"),
+        ]
+        result = calculator.calculate(entries)
+        assert len(result) == 1
+        assert result[0]["status"] == "open"
+        assert result[0]["start_time"] == DT
+        assert result[0]["end_time"] is None
+        assert result[0]["duration_seconds"] is None
 
     def test_only_unknown_entries(self, calculator):
         entries = [

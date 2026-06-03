@@ -109,4 +109,47 @@ class OutageCalculator:
                     }
                 )
 
-        return outages
+        return self._merge_overlapping(outages)
+
+    def _merge_overlapping(self, outages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Collapse overlapping IPv4/IPv6 outages into a single event.
+
+        A single physical disconnect (e.g. the nightly Zwangstrennung) drops both
+        IPv4 and IPv6 within the same second, producing one outage per protocol.
+        These represent the same incident, so we merge any time-overlapping
+        outages into one window. An open outage (no reconnect) extends to "now",
+        so it absorbs any later outage that starts during it.
+        """
+        ordered = sorted(outages, key=lambda o: o["start_time"])
+        merged: List[Dict[str, Any]] = []
+
+        for outage in ordered:
+            if merged:
+                current = merged[-1]
+                if current["end_time"] is None or outage["start_time"] <= current["end_time"]:
+                    self._combine_into(current, outage)
+                    continue
+            merged.append(dict(outage))
+
+        return merged
+
+    @staticmethod
+    def _combine_into(current: Dict[str, Any], other: Dict[str, Any]) -> None:
+        """Extend ``current`` in place to also cover ``other``."""
+        if current["end_time"] is not None:
+            if other["end_time"] is None:
+                current["end_time"] = None
+                current["end_log_entry_id"] = None
+            elif other["end_time"] > current["end_time"]:
+                current["end_time"] = other["end_time"]
+                current["end_log_entry_id"] = other["end_log_entry_id"]
+
+        planned = current["status"].startswith("planned") or other["status"].startswith("planned")
+
+        if current["end_time"] is None:
+            current["status"] = "planned-open" if planned else "open"
+            current["duration_seconds"] = None
+        else:
+            current["status"] = "planned" if planned else "closed"
+            duration = int((current["end_time"] - current["start_time"]).total_seconds())
+            current["duration_seconds"] = duration if duration > 0 else 1
