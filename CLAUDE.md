@@ -202,6 +202,7 @@ REPORT_SCHEDULE_CHECK_INTERVAL_SECONDS=3600
 - `GET /api/connection-check` - Live TR-064 connection check
 - `GET /api/device-log?limit=500` - Device log entries (descending)
 - `GET /api/outages` - Calculated outage windows
+- `POST /api/outages/recalculate` - Rebuild calculated outages from stored device logs (idempotent, keeps manual outages, no Fritzbox call)
 - `GET /api/version` - Backend version info
 
 ## Release Process
