@@ -70,11 +70,18 @@ const events = computed<EventInput[]>(() => {
 
 function handleEventClick(info: EventClickArg) {
   const { event } = info;
-  if (!event.start || event.id.endsWith('-bg')) {
+  if (event.id.endsWith('-bg')) {
     return;
   }
-  const start = event.start;
-  const end = event.end ?? new Date();
+  // Prefer the outage's own start/end. FullCalendar reports event.end as null
+  // for zero-duration outages (start === end), which previously fell back to
+  // `new Date()` and pulled every log from the outage up to the present moment.
+  const outage = event.extendedProps.outage as OutageWindow | undefined;
+  const start = outage?.start ? new Date(outage.start) : event.start;
+  if (!start) {
+    return;
+  }
+  const end = outage?.end ? new Date(outage.end) : event.end ?? start;
   const label = event.extendedProps.label ?? formatRangeLabel(start, end);
   emit('select-outage', { eventId: event.id, start, end, label });
 }
