@@ -40,11 +40,17 @@ const events = computed<EventInput[]>(() => {
     const end = outage.end ? new Date(outage.end) : new Date();
     const label = formatRangeLabel(start, end);
     const isPlanned = outage.status?.startsWith('planned');
+    // Outages where start === end (same-second disconnect/reconnect) have zero
+    // duration. FullCalendar inflates such timed events to its
+    // defaultTimedEventDuration (1h), rendering them as tall blocks. Give them a
+    // minimal positive span so eventMinHeight renders them as a thin block like
+    // the other short outages.
+    const displayEnd = end.getTime() > start.getTime() ? end : new Date(start.getTime() + 1000);
 
     inputs.push({
       id: `outage-${index}-bg`,
       start,
-      end,
+      end: displayEnd,
       display: 'background',
       backgroundColor: isPlanned ? 'rgba(59, 130, 246, 0.2)' : 'rgba(220, 38, 38, 0.25)',
       borderColor: isPlanned ? 'rgba(59, 130, 246, 0.45)' : 'rgba(220, 38, 38, 0.4)',
@@ -53,7 +59,7 @@ const events = computed<EventInput[]>(() => {
     inputs.push({
       id: `outage-${index}`,
       start,
-      end,
+      end: displayEnd,
       title: isPlanned ? 'Geplant' : 'Offline',
       backgroundColor: isPlanned ? '#3b82f6' : '#dc2626',
       borderColor: isPlanned ? '#2563eb' : '#b91c1c',
@@ -117,6 +123,10 @@ const calendarOptions = computed(() => ({
     const classNames = ['offline-event'];
     if (arg.event.extendedProps?.planned) {
       classNames.push('planned-event');
+      // Planned outages are 0-2s long and straddle FullCalendar's 30px
+      // eventShortHeight threshold, so some render stacked. Force the
+      // compact single-line ("HH:MM - Geplant") layout for all of them.
+      classNames.push('fc-timegrid-event-short');
     }
     if (props.selectedEventId && arg.event.id === props.selectedEventId) {
       classNames.push('highlighted');
