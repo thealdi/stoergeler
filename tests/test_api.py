@@ -156,6 +156,23 @@ class TestCreateOutageEndpoint:
         assert data["outage"]["duration_seconds"] is None
 
 
+class TestRecalculateEndpoint:
+    def test_recalculates_and_returns_count(self, client, mock_deps):
+        mock_deps.outage_calculator = MagicMock()
+        mock_deps.outage_repository.list_outages.return_value = []
+        mock_deps.device_log_repository.list_entries.return_value = []
+        mock_deps.outage_calculator.calculate.return_value = [{}, {}, {}]
+        resp = client.post("/outages/recalculate")
+        assert resp.status_code == 200
+        assert resp.json()["outages"] == 3
+        mock_deps.outage_repository.replace_outages.assert_called_once()
+
+    def test_returns_503_without_calculator(self, client, mock_deps):
+        # mock_deps leaves outage_calculator as its default (None)
+        resp = client.post("/outages/recalculate")
+        assert resp.status_code == 503
+
+
 class TestConnectionCheckEndpoint:
     def test_returns_connectivity(self, client, mock_deps):
         mock_deps.tracker.check_connection.return_value = {

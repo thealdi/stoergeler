@@ -59,6 +59,10 @@ class OutageCreateResponse(BaseModel):
     outage: OutageWindow
 
 
+class OutageRecalculateResponse(BaseModel):
+    outages: int = Field(description="Anzahl der neu berechneten Störungen")
+
+
 class ConnectivityStatus(BaseModel):
     connected: bool = Field(description="Gibt an, ob laut TR-064 derzeit eine Verbindung besteht")
     external_ip: Optional[str] = Field(default=None, description="Vom Router gemeldete externe IPv4")

@@ -25,6 +25,7 @@ from .email_service import EmailService
 from .fritzbox_client import FritzBoxCredentials, FritzboxClient
 from .outage_calculator import OutageCalculator
 from .outage_config import OutageKeywords
+from .recalculate_outages import recalculate_outages
 from .report_scheduler import ReportScheduler
 from .reporting import ReportingService, get_current_week_range, get_last_week_range
 from .schemas import (
@@ -34,6 +35,7 @@ from .schemas import (
     OutageCreate,
     OutageCreateResponse,
     OutageListResponse,
+    OutageRecalculateResponse,
     OutageWindow,
     StatusResponse,
 )
@@ -52,6 +54,7 @@ class Dependencies:
     reporting_service: ReportingService
     email_service: EmailService
     report_scheduler: ReportScheduler
+    outage_calculator: Optional[OutageCalculator] = None
 
 
 def _build_default_dependencies(settings: Any) -> Dependencies:
@@ -113,6 +116,7 @@ def _build_default_dependencies(settings: Any) -> Dependencies:
         reporting_service=reporting_service,
         email_service=email_service,
         report_scheduler=report_scheduler,
+        outage_calculator=outage_calculator,
     )
 
 
@@ -244,6 +248,25 @@ def create_app(deps: Optional[Dependencies] = None) -> FastAPI:
                 status=body.status,
             ),
         )
+
+    @app.post("/outages/recalculate", response_model=OutageRecalculateResponse)
+    def recalculate() -> OutageRecalculateResponse:
+        """Rebuild calculated outages from stored device logs.
+
+        Forces the recalculation that normally runs on each device-log sync,
+        without contacting the Fritzbox. Idempotent; manual outages are kept.
+        """
+        if deps.outage_calculator is None:
+            raise HTTPException(status_code=503, detail="Outage calculator not available")
+        try:
+            count = recalculate_outages(
+                device_log_repository=deps.device_log_repository,
+                outage_repository=deps.outage_repository,
+                outage_calculator=deps.outage_calculator,
+            )
+        except sqlite3.Error as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
+        return OutageRecalculateResponse(outages=count)
 
     @app.get("/connection-check", response_model=ConnectivityStatus)
     def connection_check() -> ConnectivityStatus:
